@@ -48,6 +48,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   SAT_Model.msg
+  SAT_Solution.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -93,9 +94,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+#include_directories(
+#  ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)
 
 ## Declare a cpp library
 # add_library(sat_schedule_solver
@@ -123,11 +124,11 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
+install(PROGRAMS
+  src/SATModelerAPITest.py
+  src/SATModeler.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 ## Mark executables and/or libraries for installation
 # install(TARGETS sat_schedule_solver sat_schedule_solver_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

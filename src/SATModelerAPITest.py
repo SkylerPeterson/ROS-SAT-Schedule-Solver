@@ -3,18 +3,25 @@ import roslib
 roslib.load_manifest('rospy')
 
 import rospy
+import csv
 from sat_schedule_solver.msg import *
 
-class SATModeler():
+class SATModelerAPITest():
 
     def __init__(self):
-        rospy.init_node('SATModeler', anonymous=True)
-        pubModel = rospy.Publisher('SAT_Schedule_Solution', SAT_Solution, queue_size=10)
+        pubModel = rospy.Publisher('SAT_Schedule_Model', SAT_Model, queue_size=10)
+        rospy.init_node('SATModelerAPITest', anonymous=True)
         
         # Input message handlers
-        rospy.Subscriber('SAT_Schedule_Model', SAT_Model, self.runModeler)
-        
-    def runModeler(self, msg):
+        rospy.Subscriber('SAT_Schedule_Solution', SAT_Solution, self.confirmResult)
+    
+    def runTest(self, fileName):
+        with open(fileName, 'rb') as csvfile:
+            filereader = csv.reader(csvfile, delimiter=',')
+            for row in filereader:
+                print ', '.join(row)
+    
+    def confirmResult(self, msg):
         #sequence ID: consecutively increasing ID
         msg.header.seq
         #Two-integer timestamp that is expressed as:
@@ -35,3 +42,7 @@ class SATModeler():
         msg.endTimes
         #List of uint priorities
         msg.priority
+        
+if __name__ == '__main__':
+    testDriver = SATModelerAPITest()
+    testDriver.runTest("/home/skyler/Dropbox/CSE507/Project/catkin_indigo_ws/src/sat_schedule_solver/testFiles/Test1.txt")
