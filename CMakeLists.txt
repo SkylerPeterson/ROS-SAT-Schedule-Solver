@@ -94,9 +94,10 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-#include_directories(
-#  ${CATKIN_PACKAGE_SHARE_DESTINATION}
-#)
+# include_directories(
+#   testFiles
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
 
 ## Declare a cpp library
 # add_library(sat_schedule_solver
@@ -144,11 +145,10 @@ install(PROGRAMS
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(DIRECTORY testFiles/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/testFiles
+  FILES_MATCHING PATTERN "*.txt"
+)
 
 #############
 ## Testing ##

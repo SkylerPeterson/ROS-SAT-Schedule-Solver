@@ -3,6 +3,7 @@ import roslib
 roslib.load_manifest('rospy')
 
 import rospy
+import rospkg
 import csv
 from sat_schedule_solver.msg import *
 
@@ -44,5 +45,6 @@ class SATModelerAPITest():
         msg.priority
         
 if __name__ == '__main__':
+    rospack = rospkg.RosPack()
     testDriver = SATModelerAPITest()
-    testDriver.runTest("/home/skyler/Dropbox/CSE507/Project/catkin_indigo_ws/src/sat_schedule_solver/testFiles/Test1.txt")
+    testDriver.runTest(rospack.get_path('sat_schedule_solver') + "/testFiles/Test1.txt")
