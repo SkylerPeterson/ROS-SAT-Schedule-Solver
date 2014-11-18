@@ -1,6 +1,6 @@
 Header header
 uint32 numConstraints
-uint32[] jobID
+string[] jobID
 time[] startTimes
 time[] endTimes
 uint32[] priority

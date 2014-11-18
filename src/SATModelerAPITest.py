@@ -7,20 +7,51 @@ import rospkg
 import csv
 from sat_schedule_solver.msg import *
 
+import time
+
 class SATModelerAPITest():
 
+    NUM_COLUMNS = 6
+
     def __init__(self):
-        pubModel = rospy.Publisher('SAT_Schedule_Model', SAT_Model, queue_size=10)
+        self.sequence = 0
+        self.modelPub = rospy.Publisher('SAT_Schedule_Model', SAT_Model, queue_size=10)
         rospy.init_node('SATModelerAPITest', anonymous=True)
         
         # Input message handlers
         rospy.Subscriber('SAT_Schedule_Solution', SAT_Solution, self.confirmResult)
     
     def runTest(self, fileName):
+        count = 0
+        outMsg = SAT_Model()
+        outMsg.header.seq = self.sequence
+        outMsg.header.stamp = rospy.Time.now()
+        outMsg.header.frame_id = "Schedule/Input"
+        
+        self.sequence += 1
+        jobIDsList = []
+        startTimesList = []
+        endTimesList = []
+        prioritiesList = []
         with open(fileName, 'rb') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',')
             for row in filereader:
-                print ', '.join(row)
+                if (len(row) != self.NUM_COLUMNS):
+                    print "File incorrectly formatted."
+                    exit()
+                count += 1
+                jobIDsList.append(row[0])
+                startTimesList.append(rospy.Time(int(row[1]), int(row[2])))
+                endTimesList.append(rospy.Time(int(row[3]), int(row[4])))
+                prioritiesList.append(int(row[5]))
+        
+        outMsg.numConstraints = count
+        outMsg.jobID = jobIDsList
+        outMsg.startTimes = startTimesList
+        outMsg.endTimes = endTimesList
+        outMsg.priority = prioritiesList
+        
+        self.modelPub.publish(outMsg)
     
     def confirmResult(self, msg):
         #sequence ID: consecutively increasing ID
