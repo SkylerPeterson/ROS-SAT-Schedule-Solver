@@ -1,0 +1,26 @@
+#Header is a common std_msgs message
+#  sequence ID: consecutively increasing ID
+#  Two-integer timestamp that is expressed as:
+#    stamp.secs: seconds (stamp_secs) since epoch
+#    stamp.nsecs: nanoseconds since stamp_secs
+#  Frame this data is associated with
+Header header
+#Number of constraints, size of following arrays
+uint32 numConstraints
+#List of job IDs as uints
+string[] jobID
+#List of start times in ROS time
+time[] startTimes
+#List of end times in ROS time
+time[] endTimes
+#List of uint priorities
+uint32[] priority
+---
+#Header [same as above]
+Header header
+#Number of accepted jobs
+uint32 numJobsAccepted
+#A list of accepted job IDs
+string[] acceptedJobID
+#A list of end times for the accpeted jobs
+time[] jobEndTime

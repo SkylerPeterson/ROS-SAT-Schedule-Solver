@@ -3,35 +3,38 @@ import roslib
 roslib.load_manifest('rospy')
 
 import rospy
-from sat_schedule_solver.msg import *
+from sat_schedule_solver.srv import (
+    SAT_Scheduler,
+    SAT_SchedulerResponse
+)
 
 class SATModeler():
-
     def __init__(self):
         rospy.init_node('SATModeler', anonymous=True)
-        pubModel = rospy.Publisher('SAT_Schedule_Solution', SAT_Solution, queue_size=10)
+        srvModeler = rospy.Service("/SAT_Scheduler",
+                                   SAT_Scheduler,
+                                   self.handleSchedulerRequest)
+        print "SATModeler is running"
+        rospy.spin()
         
-        # Input message handlers
-        rospy.Subscriber('SAT_Schedule_Model', SAT_Model, self.runModeler)
+    def handleSchedulerRequest(self, req):
+        req.header.seq
+        req.header.stamp
+        req.header.frame_id
+        req.numConstraints
+        req.jobID
+        req.startTimes
+        req.endTimes
+        req.priority
         
-    def runModeler(self, msg):
-        #sequence ID: consecutively increasing ID
-        msg.header.seq
-        #Two-integer timestamp that is expressed as:
-        # * stamp.secs: seconds (stamp_secs) since epoch
-        # * stamp.nsecs: nanoseconds since stamp_secs
-        # time-handling sugar is provided by the client library
-        msg.header.stamp
-        #Frame this data is associated with
-        msg.header.sframe_id
+        # We will at some point generate an actual response.
+        # Just echo to test for now.
+        resp = SAT_SchedulerResponse()
+        resp.header = req.header
+        resp.numJobsAccepted = req.numConstraints
+        resp.acceptedJobID = req.jobID
+        resp.jobEndTime = req.endTimes
+        return resp
         
-        #Number of constraints, size of following arrays
-        msg.numConstraints
-        #List of job IDs as uints
-        msg.startTimes
-        #List of start times in ROS time
-        msg.startTimes
-        #List of end times in ROS time
-        msg.endTimes
-        #List of uint priorities
-        msg.priority
+if __name__ == '__main__':
+    SATModeler()
