@@ -27,7 +27,7 @@ class SATModelerAPITest():
         outMsg = SAT_SchedulerRequest()
         outMsg.header.seq = self.sequence
         outMsg.header.stamp = rospy.Time.now()
-        outMsg.header.frame_id = "Schedule/Input"
+        outMsg.header.frame_id = "/SAT/Scheduler/Input"
         
         self.sequence += 1
         jobIDsList = []
@@ -37,14 +37,15 @@ class SATModelerAPITest():
         with open(fileName, 'rb') as csvfile:
             filereader = csv.reader(csvfile, delimiter=',')
             for row in filereader:
-                if (len(row) != self.NUM_COLUMNS):
+                if (len(row[2:])%4 != 0):
                     print "File incorrectly formatted."
                     exit()
                 count += 1
-                jobIDsList.append(row[0])
-                startTimesList.append(rospy.Time(int(row[1]), int(row[2])))
-                endTimesList.append(rospy.Time(int(row[3]), int(row[4])))
-                prioritiesList.append(int(row[5]))
+                for i in range(2, len(row), 4):
+                    jobIDsList.append(row[0])
+                    prioritiesList.append(int(row[1]))
+                    startTimesList.append(rospy.Time(int(row[i]), int(row[i+1])))
+                    endTimesList.append(rospy.Time(int(row[i+2]), int(row[i+3])))
         
         outMsg.numConstraints = count
         outMsg.jobID = jobIDsList
