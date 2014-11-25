@@ -3,6 +3,7 @@ import roslib
 roslib.load_manifest('rospy')
 
 import rospy
+from encoder import Solver
 from sat_schedule_solver.srv import (
     SAT_Scheduler,
     SAT_SchedulerResponse
@@ -11,6 +12,7 @@ from sat_schedule_solver.srv import (
 class SATModeler():
     def __init__(self):
         rospy.init_node('SATModeler', anonymous=True)
+        self.solver = Solver()
         srvModeler = rospy.Service("/SAT_Scheduler",
                                    SAT_Scheduler,
                                    self.handleSchedulerRequest)
