@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="host" default="localhost"/>
+  <arg name="port" default="27017"/>
+  <arg name="dbname" default="test_sara_uw_website"/>
+  <arg name="collname" default="test_queryjobs"/>
+
+  <!-- Make sure to run DB separately -->
+  <node name="mongo" type="mongo_wrapper_ros.py" pkg="warehouse_ros" output="log">
+    <param name="database_path" value="~/sara/db"/>
+    <param name="overwrite" value="false"/>
+  </node>
+
+  <!-- Run rosbridge -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+
+  <!-- Run QueryJob handlers -->
+  <node name="queryjob_scheduler" pkg="sara_queryjob_manager" type="queryjob_scheduler" output="screen" respawn="True">
+    <param name="host" type="str" value="$(arg host)"/>
+    <param name="port" type="int" value="$(arg port)"/>
+    <param name="dbname" type="str" value="$(arg dbname)"/>
+    <param name="collname" type="str" value="$(arg collname)"/>
+  </node>
+  
+  <node name="SATModeler" pkg="sat_schedule_solver" type="SATModeler.py" output="screen" respawn="True">
+  </node>
+  
+  <node name="SATModelerAPITest" pkg="sat_schedule_solver" type="SATModelerAPITest.py" output="screen" respawn="True">
+  </node>
+
+</launch>

@@ -21,13 +21,14 @@ class SATModelerAPISara():
     
     def confirmResult(self, resp):
         print "SAT_Scheduler Response"
-        print "  header.seq = " + str(resp.header.seq)
-        print "  header.stamp = " + str(resp.header.stamp)
-        print "  header.sframe_id = " + str(resp.header.frame_id)
+        print "  header:"
+        print "    seq = " + str(resp.header.seq)
+        print "    stamp = " + str(resp.header.stamp)
+        print "    sframe_id = " + str(resp.header.frame_id)
         
-        print " numJobsAccepted  = " + str(resp.numJobsAccepted)
-        print " acceptedJobID  = " + str(resp.acceptedJobID)
-        print " jobEndTime  = " + str(resp.jobEndTime)
+        print "  numJobsAccepted  = " + str(resp.numJobsAccepted)
+        print "  acceptedJobID  = " + str(resp.acceptedJobID)
+        print "  jobEndTime  = " + str(resp.jobEndTime)
         
 if __name__ == '__main__':
     rospack = rospkg.RosPack()
