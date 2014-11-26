@@ -1,0 +1,12 @@
+#Header is a common std_msgs message
+#  sequence ID: consecutively increasing ID
+#  Two-integer timestamp that is expressed as:
+#    stamp.secs: seconds (stamp_secs) since epoch
+#    stamp.nsecs: nanoseconds since stamp_secs
+#  Frame this data is associated with
+Header header
+---
+#Header [same as above]
+Header header
+#Whether or not scheduling was completed or aborted
+bool success

@@ -55,6 +55,7 @@ add_message_files(
 add_service_files(
   FILES
   SAT_Scheduler.srv
+  ScheduleAllQueryJobs.srv
 )
 
 ## Generate actions in the 'action' folder

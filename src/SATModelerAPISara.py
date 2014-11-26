@@ -7,7 +7,9 @@ import rospkg
 import csv
 from sat_schedule_solver.srv import (
     SAT_Scheduler,
-    SAT_SchedulerRequest
+    SAT_SchedulerRequest,
+    ScheduleAllQueryJobs,
+    ScheduleAllQueryJobsResponse
 )
 
 import time
@@ -16,8 +18,39 @@ class SATModelerAPISara():
     def __init__(self):
         rospy.init_node('SATModelerAPISara', anonymous=True)
         rospy.wait_for_service('/SAT_Scheduler')
+        srvModeler = rospy.Service('/sat_scheduler_API',
+                                   ScheduleAllQueryJobs,
+                                   self.handleDBJobUpdateRequest)
         self.SAT_Scheduler_Service = rospy.ServiceProxy('/SAT_Scheduler', SAT_Scheduler)
         self.sequence = 0
+        self.run()
+    
+    def handleDBJobUpdateRequest(self, req):
+        resp = ScheduleAllQueryJobsResponse()
+        resp.header = req.header
+        resp.success = True
+        return resp
+    
+    def run(self):
+        count = 0
+        outMsg = SAT_SchedulerRequest()
+        outMsg.header.seq = self.sequence
+        outMsg.header.stamp = rospy.Time.now()
+        outMsg.header.frame_id = "/SAT/Scheduler/Input"
+        
+        self.sequence += 1
+        jobIDsList = []
+        startTimesList = []
+        endTimesList = []
+        prioritiesList = []
+        
+        outMsg.numConstraints = count
+        outMsg.jobID = jobIDsList
+        outMsg.startTimes = startTimesList
+        outMsg.endTimes = endTimesList
+        outMsg.priority = prioritiesList
+        
+        sequence += 1
     
     def confirmResult(self, resp):
         print "SAT_Scheduler Response"
