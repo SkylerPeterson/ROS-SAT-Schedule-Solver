@@ -6,16 +6,12 @@
   <arg name="dbname" default="test_sara_uw_website"/>
   <arg name="collname" default="test_queryjobs"/>
 
-  <!-- Make sure to run DB separately -->
   <node name="mongo" type="mongo_wrapper_ros.py" pkg="warehouse_ros" output="log">
-    <param name="database_path" value="~/sara/db"/>
-    <param name="overwrite" value="false"/>
+    <param name="database_path" value="/tmp/test_sara_db"/>
+    <param name="overwrite" value="true"/>
   </node>
 
-  <!-- Run rosbridge -->
-  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
-
-  <!-- Run QueryJob handlers -->
+  <!-- queryjob_scheduler node -->
   <node name="queryjob_scheduler" pkg="sara_queryjob_manager" type="queryjob_scheduler" output="screen" respawn="True">
     <param name="host" type="str" value="$(arg host)"/>
     <param name="port" type="int" value="$(arg port)"/>
@@ -27,10 +23,17 @@
   </node>
   
   <node name="SATModelerAPISara" pkg="sat_schedule_solver" type="SATModelerAPISara.py" output="screen" respawn="True">
-    <param name="host" type="str" value="$(arg host)"/>
-    <param name="port" type="int" value="$(arg port)"/>
     <param name="dbname" type="str" value="$(arg dbname)"/>
     <param name="collname" type="str" value="$(arg collname)"/>
   </node>
+
+  <!-- Test nodes -->
+  <!-- test_queryjob_scheduler_xxx files contain only one function for testing. This is because we need queryjob_scheduler to be restarted every time each function is being called. -->
+
+  <test test-name="test_queryjob_scheduler_valid_resp_n_db" pkg="sara_queryjob_manager" type="test_queryjob_scheduler" args="--testcase_id 0 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
+
+  <test test-name="test_queryjob_scheduler_valid_multiple" pkg="sara_queryjob_manager" type="test_queryjob_scheduler" args="--testcase_id 1 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
+
+  <test test-name="test_queryjob_scheduler_valid_execution" pkg="sara_queryjob_manager" type="test_queryjob_scheduler" args="--testcase_id 2 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
 
 </launch>

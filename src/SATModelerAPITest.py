@@ -10,8 +10,6 @@ from sat_schedule_solver.srv import (
     SAT_SchedulerRequest
 )
 
-import time
-
 class SATModelerAPITest():
 
     NUM_COLUMNS = 6
