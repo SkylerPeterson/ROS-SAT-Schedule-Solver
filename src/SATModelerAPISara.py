@@ -37,10 +37,10 @@ class SATModelerAPISara():
         self._collection = connection[dbname][collname]
         # Setup services and messages
         rospy.wait_for_service('/SAT_Scheduler')
+        self.SAT_Scheduler_Service = rospy.ServiceProxy('/SAT_Scheduler', SAT_Scheduler)
         srvModeler = rospy.Service('/sat_scheduler_API',
                                    ScheduleAllQueryJobs,
                                    self.handleDBJobUpdateRequest)
-        self.SAT_Scheduler_Service = rospy.ServiceProxy('/SAT_Scheduler', SAT_Scheduler)
         self._pub = rospy.Publisher('/queryjob_update', QueryJobUpdate, queue_size=10000)
         # Initialize variables
         self.sequence = 0
@@ -50,7 +50,6 @@ class SATModelerAPISara():
     def handleDBJobUpdateRequest(self, req):
         resp = ScheduleAllQueryJobsResponse()
         resp.header = req.header
-        
         try:
             jobList = self.getAllJobsFromDB()
             orderedJobList = self.scheduleJobs(jobList)
@@ -86,23 +85,6 @@ class SATModelerAPISara():
             order += 1
         
     def scheduleJobs(self, rawJobList):
-        for job in rawJobList:
-            print job
-        return rawJobList
-        
-    def getAllJobsFromDB(self):
-        # Set current running job to scheduled (let be rescheduled)
-        self._collection.find_and_modify(
-            {"status": RUNNING},
-            {"$set": {"status": RECEIVED,
-                      "timecompleted": dt.utcnow().replace(tzinfo=utc)}}
-        )
-        # Get all recieved, scheduled, and aborted tasks
-        query = {"$or": [{"status": RECEIVED}, {"status": SCHEDULED}, {"status": ABORTED}]}
-        qr = self._collection.find(query)
-        return qr
-    
-    def run(self):
         count = 0
         outMsg = SAT_SchedulerRequest()
         outMsg.header.seq = self.sequence
@@ -114,6 +96,11 @@ class SATModelerAPISara():
         startTimesList = []
         endTimesList = []
         prioritiesList = []
+        print rawJobList[0]
+        newJobList = []
+        for job in rawJobList:
+            newJobList.append(job)
+            count += 1
         
         outMsg.numConstraints = count
         outMsg.jobID = jobIDsList
@@ -126,6 +113,19 @@ class SATModelerAPISara():
             self.confirmResult(resp)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
+        return newJobList
+        
+    def getAllJobsFromDB(self):
+        # Set current running job to scheduled (let be rescheduled)
+        self._collection.find_and_modify(
+            {"status": RUNNING},
+            {"$set": {"status": RECEIVED,
+                      "timecompleted": dt.utcnow().replace(tzinfo=utc)}}
+        )
+        # Get all recieved, scheduled, and aborted tasks
+        query = {"$or": [{"status": RECEIVED}, {"status": SCHEDULED}, {"status": ABORTED}]}
+        qr = self._collection.find(query)
+        return qr
     
     def confirmResult(self, resp):
         print "SAT_Scheduler Response"

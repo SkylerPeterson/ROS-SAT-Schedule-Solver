@@ -1,0 +1,52 @@
+#!/usr/bin/python
+
+# ######################################################################
+# Imports
+# ######################################################################
+
+import rostest
+
+# System-builtins
+import argparse
+import sys
+
+# Local
+from testutils import TestQueryJobStore
+from test_sat_queryjob_scheduler import (
+    test_sat_schedule_single_item,
+    test_sat_schedule_multiple_items
+)
+
+# ######################################################################
+# Module level constants
+# ######################################################################
+
+PKG = "sat_schedule_solver"
+
+
+# ######################################################################
+# Main
+# ######################################################################
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--testcase_id", type=int,
+                        help="ID of the test case.")
+    args, unknown = parser.parse_known_args()
+
+    if args.testcase_id == 0:
+        NAME = "test_sat_schedule_single_item"
+        setattr(TestQueryJobStore,
+                NAME,
+                test_sat_schedule_single_item)
+        rostest.run(PKG, NAME, TestQueryJobStore)
+    elif args.testcase_id == 1:
+        NAME = "test_sat_schedule_multiple_items"
+        setattr(TestQueryJobStore,
+                NAME,
+                test_sat_schedule_multiple_items)
+        rostest.run(PKG, NAME, TestQueryJobStore)
+    else:
+        print >> sys.stderr, "unknown testcase_id: {0}".format(
+            args.testcase_id)
+        sys.exit(1)

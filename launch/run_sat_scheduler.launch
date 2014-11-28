@@ -27,8 +27,6 @@
   </node>
   
   <node name="SATModelerAPISara" pkg="sat_schedule_solver" type="SATModelerAPISara.py" output="screen" respawn="True">
-    <param name="host" type="str" value="$(arg host)"/>
-    <param name="port" type="int" value="$(arg port)"/>
     <param name="dbname" type="str" value="$(arg dbname)"/>
     <param name="collname" type="str" value="$(arg collname)"/>
   </node>
