@@ -53,7 +53,7 @@ def test_sat_schedule_single_item(self):
     self.assertEqual(self._collection.find().count(), 1)
 
     loopCount = 0
-    while (loopCount < 10):
+    while (loopCount < 100):
         # DB state check after the goal is accepted.
         qr = self._collection.find({
             "_id": queryjob_id,
@@ -61,12 +61,12 @@ def test_sat_schedule_single_item(self):
         })
         self.assertEqual(qr.count(), 1)
         self.assertEqual(qr[0]["timeissued"].replace(tzinfo=utc), timeissued)
-        if qr[0]["status"] == QueryJobStatus.SCHEDULED:
+        if qr[0]["status"] == QueryJobStatus.RUNNING:
             break
-        rospy.sleep(50)
+        rospy.sleep(0.1)
         loopCount += 1
     
-    self.assertEqual(qr[0]["status"], QueryJobStatus.SCHEDULED)
+    self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
 
         
 def test_sat_schedule_multiple_items(self):
