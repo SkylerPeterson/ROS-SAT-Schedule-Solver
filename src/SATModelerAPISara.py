@@ -10,10 +10,14 @@ from sat_schedule_solver.srv import (
     ScheduleAllQueryJobs,
     ScheduleAllQueryJobsResponse
 )
+from sat_schedule_solver.msg import (
+    datetimemsg
+)
 from sara_queryjob_manager.msg import (
     QueryJobStatus, QueryJobUpdate
 )
 from datetime import datetime as dt
+from time import time, mktime
 from pytz import utc
 from pymongo import MongoClient
 import csv
@@ -99,6 +103,10 @@ class SATModelerAPISara():
         print rawJobList[0]
         newJobList = []
         for job in rawJobList:
+            jobIDsList.append(str(job['_id']))
+            startTimesList.append(generateDatetimeMsg(job['timeissued']))
+            endTimesList.append(generateDatetimeMsg(job['deadline']))
+            prioritiesList.append(job['priority'])
             newJobList.append(job)
             count += 1
         
@@ -128,15 +136,21 @@ class SATModelerAPISara():
         return qr
     
     def confirmResult(self, resp):
-        print "SAT_Scheduler Response"
-        print "  header:"
-        print "    seq = " + str(resp.header.seq)
-        print "    stamp = " + str(resp.header.stamp)
-        print "    sframe_id = " + str(resp.header.frame_id)
+        print resp
         
-        print "  numJobsAccepted  = " + str(resp.numJobsAccepted)
-        print "  acceptedJobID  = " + str(resp.acceptedJobID)
-        print "  jobEndTime  = " + str(resp.jobEndTime)
+def generateDatetimeMsg(dt):
+    """
+    Returns a message from the datetime given.
+    """
+    dtMsg = datetimemsg()
+    dtMsg.year = dt.year
+    dtMsg.month = dt.month
+    dtMsg.day = dt.day
+    dtMsg.hour = dt.hour
+    dtMsg.minute = dt.minute
+    dtMsg.second = dt.second
+    dtMsg.microsecond = dt.microsecond
+    return dtMsg
         
 if __name__ == '__main__':
     rospack = rospkg.RosPack()

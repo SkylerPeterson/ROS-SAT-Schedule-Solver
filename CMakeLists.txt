@@ -49,6 +49,7 @@ add_message_files(
   FILES
   SAT_Model.msg
   SAT_Solution.msg
+  datetimemsg.msg
 )
 
 ## Generate services in the 'srv' folder

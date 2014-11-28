@@ -20,6 +20,7 @@ class SATModeler():
         rospy.spin()
         
     def handleSchedulerRequest(self, req):
+        print req
         req.header.seq
         req.header.stamp
         req.header.frame_id

@@ -10,9 +10,9 @@ uint32 numConstraints
 #List of job IDs as uints
 string[] jobID
 #List of start times in ROS time
-time[] startTimes
+datetimemsg[] startTimes
 #List of end times in ROS time
-time[] endTimes
+datetimemsg[] endTimes
 #List of uint priorities
 uint32[] priority
 ---
@@ -23,4 +23,4 @@ uint32 numJobsAccepted
 #A list of accepted job IDs
 string[] acceptedJobID
 #A list of end times for the accpeted jobs
-time[] jobEndTime
+datetimemsg[] jobEndTime

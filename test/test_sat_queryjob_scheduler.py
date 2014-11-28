@@ -42,7 +42,12 @@ def test_sat_schedule_single_item(self):
     # Create test instances.
     timeissued_int = random_unix_epoch()
     timeissued = dt.utcfromtimestamp(timeissued_int).replace(tzinfo=utc)
-    queryjob_id = self._collection.insert({"dummy": None})
+    deadline_int = timeissued_int + 100
+    deadline = dt.utcfromtimestamp(deadline_int).replace(tzinfo=utc)
+    priority = 0
+    queryjob_id = self._collection.insert({"dummy": None,
+                                           "deadline": deadline,
+                                           "priority": priority})
     queryjob_id_str = str(queryjob_id)
 
     # Call service.
@@ -61,6 +66,8 @@ def test_sat_schedule_single_item(self):
         })
         self.assertEqual(qr.count(), 1)
         self.assertEqual(qr[0]["timeissued"].replace(tzinfo=utc), timeissued)
+        self.assertEqual(qr[0]["deadline"].replace(tzinfo=utc), deadline)
+        self.assertEqual(qr[0]["priority"], priority)
         if qr[0]["status"] == QueryJobStatus.RUNNING:
             break
         rospy.sleep(0.1)
