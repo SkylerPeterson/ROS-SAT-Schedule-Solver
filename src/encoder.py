@@ -68,7 +68,7 @@ class Solver:
                 print(model)
             for t in range(len(self.tasks)):
                 for task in self.tasks:
-                    if z3.is_true(model[s.taskVars[task][t]]):
+                    if z3.is_true(model[self.taskVars[task][t]]):
                         path.append(task)
 
             print "found path " + str([str(task) for task in path])

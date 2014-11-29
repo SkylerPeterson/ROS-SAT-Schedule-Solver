@@ -16,7 +16,7 @@ from sat_schedule_solver.msg import (
 from sara_queryjob_manager.msg import (
     QueryJobStatus, QueryJobUpdate
 )
-from datetime import datetime as dt
+from datetime import datetime
 from time import time, mktime
 from pytz import utc
 from pymongo import MongoClient
@@ -100,6 +100,7 @@ class SATModelerAPISara():
         startTimesList = []
         endTimesList = []
         prioritiesList = []
+        locationsList = []
         print rawJobList[0]
         newJobList = []
         for job in rawJobList:
@@ -107,6 +108,7 @@ class SATModelerAPISara():
             startTimesList.append(generateDatetimeMsg(job['timeissued']))
             endTimesList.append(generateDatetimeMsg(job['deadline']))
             prioritiesList.append(job['priority'])
+            locationsList.append(job['location'])
             newJobList.append(job)
             count += 1
         
@@ -115,6 +117,7 @@ class SATModelerAPISara():
         outMsg.startTimes = startTimesList
         outMsg.endTimes = endTimesList
         outMsg.priority = prioritiesList
+        outMsg.location = locationsList
         
         try:
             resp = self.SAT_Scheduler_Service(outMsg)
@@ -128,7 +131,7 @@ class SATModelerAPISara():
         self._collection.find_and_modify(
             {"status": RUNNING},
             {"$set": {"status": RECEIVED,
-                      "timecompleted": dt.utcnow().replace(tzinfo=utc)}}
+                      "timecompleted": datetime.utcnow().replace(tzinfo=utc)}}
         )
         # Get all recieved, scheduled, and aborted tasks
         query = {"$or": [{"status": RECEIVED}, {"status": SCHEDULED}, {"status": ABORTED}]}
