@@ -37,8 +37,8 @@ def generate_uniq_objectid(collection):
     return oid
 
 
-def random_unix_epoch():
-    return random.randint(0, MAX_EPOCH)
+def random_unix_epoch(lowTime=0, maxTime=MAX_EPOCH):
+    return random.randint(lowTime, maxTime)
 
 
 # ######################################################################

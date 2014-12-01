@@ -56,8 +56,8 @@ class SATModelerAPISara():
         resp.header = req.header
         try:
             jobList = self.getAllJobsFromDB()
-            orderedJobList = self.scheduleJobs(jobList)
-            self.publishUpdates(orderedJobList)
+            acceptedJobs, cancelledJobs = self.scheduleJobs(jobList)
+            self.publishUpdates(acceptedJobs, cancelledJobs)
             resp.success = True
         except:
             rospy.logerr("Error while scheduling results:", sys.exc_info()[0])
@@ -65,12 +65,12 @@ class SATModelerAPISara():
         
         return resp
         
-    def publishUpdates(self, jobList):
+    def publishUpdates(self, acceptedJobList, cancelledJobList):
         queue = []
         order = 1  # order starts from 1
-        for q in jobList:
+        for q in acceptedJobList:
             queryjob_id = q["_id"]
-            query = {"_id": q["_id"]}
+            query = {"_id": queryjob_id}
             update = {"$set": {
                 "order": order,
                 "status": SCHEDULED
@@ -88,6 +88,25 @@ class SATModelerAPISara():
             queue.append(queryjob_id)
             order += 1
         
+        for q in cancelledJobList:
+            queryjob_id = q["_id"]
+            query = {"_id": queryjob_id}
+            update = {"$set": {
+                "order": order,
+                "status": CANCELLED
+            }}
+            if not self._collection.find_and_modify(query, update):
+                rospy.logerr("Error while writing schedule results!")
+                rospy.signal_shutdown("Bye!")
+
+            # Notify updates.
+            msg = QueryJobUpdate()
+            msg.queryjob_id = str(queryjob_id)
+            msg.field_names = ["order", "status"]
+            self._pub.publish(msg)
+            
+            queue.append(queryjob_id)
+    
     def scheduleJobs(self, rawJobList):
         count = 0
         outMsg = SAT_SchedulerRequest()
@@ -101,7 +120,6 @@ class SATModelerAPISara():
         endTimesList = []
         prioritiesList = []
         locationsList = []
-        print rawJobList[0]
         newJobList = []
         for job in rawJobList:
             jobIDsList.append(str(job['_id']))
@@ -121,10 +139,17 @@ class SATModelerAPISara():
         
         try:
             resp = self.SAT_Scheduler_Service(outMsg)
-            self.confirmResult(resp)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
-        return newJobList
+        
+        acceptedJobList = []
+        cancelledJobList = []
+        for job in newJobList:
+            if str(job['_id']) in resp.acceptedJobID:
+                acceptedJobList.append(job)
+            else:
+                cancelledJobList.append(job)
+        return acceptedJobList, cancelledJobList
         
     def getAllJobsFromDB(self):
         # Set current running job to scheduled (let be rescheduled)
@@ -140,7 +165,7 @@ class SATModelerAPISara():
     
     def confirmResult(self, resp):
         print resp
-        
+
 def generateDatetimeMsg(dt):
     """
     Returns a message from the datetime given.
