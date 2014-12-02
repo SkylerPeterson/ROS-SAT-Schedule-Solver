@@ -120,6 +120,7 @@ class SATModelerAPISara():
         endTimesList = []
         prioritiesList = []
         locationsList = []
+        taskIDList = []
         newJobList = []
         for job in rawJobList:
             jobIDsList.append(str(job['_id']))
@@ -127,6 +128,7 @@ class SATModelerAPISara():
             endTimesList.append(generateDatetimeMsg(job['deadline']))
             prioritiesList.append(job['priority'])
             locationsList.append(job['location'])
+            taskIDList.append(job['taskId'])
             newJobList.append(job)
             count += 1
         
@@ -136,6 +138,7 @@ class SATModelerAPISara():
         outMsg.endTimes = endTimesList
         outMsg.priority = prioritiesList
         outMsg.location = locationsList
+        outMsg.taskId = taskIDList
         
         try:
             resp = self.SAT_Scheduler_Service(outMsg)

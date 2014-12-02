@@ -17,6 +17,8 @@ datetimemsg[] endTimes
 uint32[] priority
 #List of string locations for each job
 string[] location
+#List of string task Ids for each job
+string[] taskId
 ---
 #Header [same as above]
 Header header

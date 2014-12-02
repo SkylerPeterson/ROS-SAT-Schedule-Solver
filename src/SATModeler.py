@@ -34,19 +34,18 @@ class SATModeler():
             rospy.logerr("Number of constraints and priorities does not match.")
         if (req.numConstraints != len(req.location)):
             rospy.logerr("Number of constraints and locations does not match.")
+        if (req.numConstraints != len(req.taskId)):
+            rospy.logerr("Number of constraints and task IDs does not match.")
         
         now = datetime.utcnow().replace(tzinfo=utc)
         tasks = []
         for i in range(0, req.numConstraints):
             deadline = readDatetimeMsg(req.endTimes[i])
-            #TODO: Add task duration class to encoder.py and use that.
-            duration = 10
-            tasks.append(Task(req.priority[i], (deadline - now).total_seconds(), req.location[i], duration, req.jobID[i]))
-        #TODO: Add WorldMap object to get distances.
+            tasks.append(Task(req.priority[i], (deadline - now).total_seconds(), req.location[i], req.taskId[i], req.jobID[i]))
+        #TODO: Add World object to get travel times and task durations.
         solver = Solver(tasks=tasks)
         taskList = solver.solveTasks()
         
-        #TODO: Create response from solver response
         resp = SAT_SchedulerResponse()
         resp.header.seq = req.header.seq
         resp.header.stamp = rospy.Time.now()

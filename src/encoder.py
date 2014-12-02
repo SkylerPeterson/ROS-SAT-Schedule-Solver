@@ -26,7 +26,7 @@ class World:
 class Solver:
     START = Task(0,0,"",0,"Start")
     
-    def __init__(self, worldmap=WorldMap(), curTime=0, tasks=[]):
+    def __init__(self, worldmap=World(), curTime=0, tasks=[]):
         self.tasks = tasks
         self.world = worldmap
         self.globalTime = curTime
@@ -53,7 +53,7 @@ class Solver:
                 print "Missed deadline for task " + task.name
                 self.giveUpTask(task)
 
-    def extractSolution(debugPrint=False):
+    def extractSolution(self, debugPrint=False):
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
         while(len(hardClauses) > 0):
             if self.solver.check(*hardClauses) == z3.sat:
@@ -87,7 +87,7 @@ class Solver:
         self.addUniqueTaskStepConstraint()
         self.addTimeVars()
         self.addTaskConstraints()
-        extractSolution(debugPrint)
+        return self.extractSolution(debugPrint)
 
     def taskDistance(self, task1, task2):
         if task1.location == task2.location:

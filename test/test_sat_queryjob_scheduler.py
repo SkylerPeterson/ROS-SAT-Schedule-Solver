@@ -41,17 +41,19 @@ def test_sat_schedule_single_item(self):
     s = rospy.ServiceProxy("/schedule_queryjob", ScheduleQueryJob)
 
     # Create test instances.
-    timeissued_int = random_unix_epoch(int(time.time()) + 100)
+    timeissued_int = random_unix_epoch(int(time.time()) + 101)
     timeissued = dt.utcfromtimestamp(timeissued_int).replace(tzinfo=utc)
     deadline_int = timeissued_int + 100
     deadline = dt.utcfromtimestamp(deadline_int).replace(tzinfo=utc)
     priority = 0
-    #TODO: add a test rooms generator
+    #TODO: add a test rooms/task generator
     location = 'Room01'
+    taskId = 'Task01'
     queryjob_id = self._collection.insert({"dummy": None,
                                            "deadline": deadline,
                                            "priority": priority,
-                                           "location": location})
+                                           "location": location,
+                                           "taskId": taskId})
     queryjob_id_str = str(queryjob_id)
 
     # Call service.
