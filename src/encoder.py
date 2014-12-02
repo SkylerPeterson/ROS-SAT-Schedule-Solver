@@ -1,13 +1,11 @@
 ## Encoder.py
-## Takes a list of Tasks, and returns whether or not the tasks can be completed, given a WorldMap
+## Takes a list of Tasks, and returns whether or not the tasks can be completed, given a World
 
 import z3
 from z3 import Not, Or, And, If
 
 class Task:
     def __init__(self, weight, deadline, location, taskID, name):
-        if weight != 0:
-            raise NotImplementedError()
         self.weight = weight
         self.deadline = deadline
         self.location = location
@@ -22,6 +20,13 @@ class World:
         return 10
     def duration(self, taskID):
         return 10
+
+# For debugging purposes
+T1 = Task(0, 20, "kitchen", 0, "check-for-food")
+T2 = Task(0, 30, "lab", 0, "check-for-pizza")
+T3 = Task(0, 30, "CSE315", 0, "check-for-cookies")
+T4 = Task(2, 20, "2nd-floor", 0, "check-for-tacos")
+T5 = Task(3, 40, "CSE546", 0, "demand-cookies")
 
 class Solver:
     START = Task(0,0,"",0,"Start")
@@ -54,28 +59,31 @@ class Solver:
                 self.giveUpTask(task)
 
     def extractSolution(self, debugPrint=False):
+        if debugPrint:
+            print "clauses are: " + str(self.solver)
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
-        while(len(hardClauses) > 0):
-            if self.solver.check(*hardClauses) == z3.sat:
-                model = self.solver.model()
-                path = []
-                if self.debugPrint:
-                    print(model)
-                for t in range(len(self.tasks)):
-                    for task in self.tasks:
-                        if z3.is_true(model[self.taskVars[task][t]]):
-                            path.append(task)
-                print "found path " + str([str(task) for task in path])
-                return path
-            else:
-                print "Could not find a valid path!"
-                unsatCore = self.solver.unsat_core()
-                unsatCoreTasks = [task for task in self.tasks if self.taskVars[task][-1] in unsatCore]
-                # Heuristic for the task most likely to allow a path if it is removed
-                removeTask = max(unsatCoreTasks, key=lambda task: \
-                                 self.world.duration(task.ID) / task.deadline)
-                hardClauses.remove(self.taskVars[removeTask][-1])
-        return []
+        if debugPrint:
+            print "hardClauses: " + str(hardClauses)
+        hardModel = maxSAT(self.solver, [(clause, 1) for clause in hardClauses], debugPrint=debugPrint)
+        if debugPrint:
+            print "hardModel: " + str(hardModel)
+        acceptedHards = [clause for clause in hardClauses if z3.is_true(hardModel[clause])]
+        self.solver.add(*acceptedHards)
+        model = maxSAT(self.solver, [(v[-1], k.weight) for k,v in self.taskVars.items()\
+                                     if k.weight != 0],debugPrint=debugPrint)
+        if debugPrint:
+            print "model: " + str(model)
+        path = self.getPath(model)
+        print "Found path " + str([str(task) for task in path])
+        return path
+
+    def getPath(self, model):
+        path = []
+        for t in range(len(self.tasks)):
+            for task in self.tasks:
+                if z3.is_true(model[self.taskVars[task][t]]):
+                    path.append(task)
+        return path
 
     def solveTasks(self, startLoc="l0", curTime=-1, debugPrint=False):
         self.debugPrint = debugPrint
@@ -83,7 +91,7 @@ class Solver:
         if curTime != -1:
             self.updateTime(curTime)
         self.startLoc = startLoc
-        self.addVars()
+        self.createVars()
         self.addUniqueTaskStepConstraint()
         self.addTimeVars()
         self.addTaskConstraints()
@@ -99,7 +107,7 @@ class Solver:
         else:
             return self.world.time(task1.location, task2.location)
 
-    def addVars(self):
+    def createVars(self):
         self.taskVars = {}
         for task in self.tasks:
             self.taskVars[task] = {-1:z3.Bool(str(task))}
@@ -164,3 +172,32 @@ class Solver:
             self.solver.add(constraint)
         if self.debugPrint:
             print "Added time constraints: " + str(timeConstraints)
+
+## All hard clauses should have already been added to the solver.
+def maxSAT(solver, var_weight_pairs, debugPrint=False):
+    min_cost = None
+    best_model = None
+    conflictVars = []
+    softVars = [v for v, weight in var_weight_pairs]
+    solver_result = solver.check()
+    while(solver_result == z3.sat):
+        cost = 0
+        model = solver.model()
+        for var, weight in var_weight_pairs:
+            if z3.is_false(model[var]):
+                cost += weight
+        if min_cost == None or cost < min_cost:
+            min_cost = cost
+            best_model = model
+        fresh_var_name = "block"
+        interp = [v for v in softVars if z3.is_false(model[v])]
+        for v in interp:
+            fresh_var_name += "_" + str(v)
+        fresh_var = z3.Bool(fresh_var_name)
+        solver.add(Or(Not(fresh_var), *interp))
+        conflictVars.append(fresh_var)
+        solver_result = solver.check(*conflictVars)
+    if debugPrint:
+        print "best model was " + str(best_model)
+        print "with cost " + str(min_cost)
+    return best_model
