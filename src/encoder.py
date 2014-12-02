@@ -5,20 +5,22 @@ import z3
 from z3 import Not, Or, And, If
 
 class Task:
-    def __init__(self, weight, deadline, location, duration, name):
+    def __init__(self, weight, deadline, location, taskID, name):
         if weight != 0:
             raise NotImplementedError()
         self.weight = weight
         self.deadline = deadline
         self.location = location
-        self.duration = duration
+        self.ID = taskID
         self.name = name
 
     def __str__(self):
         return self.name
 
-class WorldMap:
+class World:
     def time(self, locationA, locationB):
+        return 10
+    def duration(self, taskID):
         return 10
 
 class Solver:
@@ -47,9 +49,33 @@ class Solver:
         self.globalTime = curTime
         for task in tasks:
             task.deadline -= amount
-            if task.deadline < task.duration:
+            if task.deadline < self.world.duration(task.ID):
                 print "Missed deadline for task " + task.name
                 self.giveUpTask(task)
+
+    def extractSolution(debugPrint=False):
+        hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
+        while(len(hardClauses) > 0):
+            if self.solver.check(*hardClauses) == z3.sat:
+                model = self.solver.model()
+                path = []
+                if self.debugPrint:
+                    print(model)
+                for t in range(len(self.tasks)):
+                    for task in self.tasks:
+                        if z3.is_true(model[self.taskVars[task][t]]):
+                            path.append(task)
+                print "found path " + str([str(task) for task in path])
+                return path
+            else:
+                print "Could not find a valid path!"
+                unsatCore = self.solver.unsat_core()
+                unsatCoreTasks = [task for task in self.tasks if self.taskVars[task][-1] in unsatCore]
+                # Heuristic for the task most likely to allow a path if it is removed
+                removeTask = max(unsatCoreTasks, key=lambda task: \
+                                 self.world.duration(task.ID) / task.deadline)
+                hardClauses.remove(self.taskVars[removeTask][-1])
+        return []
 
     def solveTasks(self, startLoc="l0", curTime=-1, debugPrint=False):
         self.debugPrint = debugPrint
@@ -60,27 +86,8 @@ class Solver:
         self.addVars()
         self.addUniqueTaskStepConstraint()
         self.addTimeVars()
-        self.addHardTaskConstraints()
-        if self.solver.check(*[v[-1] for k,v in self.taskVars.items()]) == z3.sat:
-            model = self.solver.model()
-            path = []
-            if self.debugPrint:
-                print(model)
-            for t in range(len(self.tasks)):
-                for task in self.tasks:
-                    if z3.is_true(model[self.taskVars[task][t]]):
-                        path.append(task)
-
-            print "found path " + str([str(task) for task in path])
-            return path
-        else:
-            print "Could not find a valid path!"
-            unsatCore = self.solver.unsat_core()
-            unsatCoreTasks = [task for task in self.tasks if self.taskVars[task][-1] in unsatCore]
-            # Heuristic for the task most likely to allow a path if it is removed
-            removeTask = max(unsatCoreTasks, key=lambda task: task.duration / task.deadline)
-            self.giveUpTask(removeTask)
-            return self.solveTasks(startLoc,curTime,debugPrint)
+        self.addTaskConstraints()
+        extractSolution(debugPrint)
 
     def taskDistance(self, task1, task2):
         if task1.location == task2.location:
@@ -115,15 +122,15 @@ class Solver:
         if self.debugPrint:
             print "Added unique task step contraints: " + str(uniqueTaskStepConstraints)
 
-    def addHardTaskConstraints(self):
+    def addTaskConstraints(self):
         htConstraints = []
         for task in self.tasks:
-            if task.weight == 0:
-                taskAtTimes = []
-                for t in range(len(self.tasks)):
-                    htConstraints.append(Or(Not(self.taskVars[task][t]), self.timeVars[t] + task.duration <= task.deadline))
-                    taskAtTimes.append(self.taskVars[task][t])
-                htConstraints.append(Or(Not(self.taskVars[task][-1]),*taskAtTimes))
+            taskAtTimes = []
+            for t in range(len(self.tasks)):
+                htConstraints.append(Or(Not(self.taskVars[task][t]), \
+                                        self.timeVars[t] + self.world.duration(task.ID) <= task.deadline))
+                taskAtTimes.append(self.taskVars[task][t])
+            htConstraints.append(Or(Not(self.taskVars[task][-1]),*taskAtTimes))
         for constraint in htConstraints:
             self.solver.add(constraint)
 
@@ -147,7 +154,7 @@ class Solver:
                     time += If(Or(And(self.taskVars[task1][t], self.taskVars[task2][t+1]), \
                                   And(self.taskVars[task2][t], self.taskVars[task1][t+1])),\
                                self.taskDistance(task1,task2), 0)
-                time += If(self.taskVars[task1][t], task1.duration, 0)
+                time += If(self.taskVars[task1][t], self.world.duration(task1.ID), 0)
             var = z3.Int("TimeVar" + str(t))
             timeConstraints.append(var == time)
             self.timeVars.append(var)
