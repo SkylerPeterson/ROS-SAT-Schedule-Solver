@@ -37,9 +37,9 @@ class Solver:
         self.solver = z3.Solver()
 
     def addTask(self, task, curTime=-1):
+        self.tasks.append(task)
         if curTime != -1:
             self.updateTime(curTime)
-        self.tasks.append(task)
 
     def finishTask(self, task):
         self.tasks.remove(task)
