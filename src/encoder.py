@@ -30,8 +30,6 @@ T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
 T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
 
 class Solver:
-    START = Task(0,0,"",0,"Start")
-    
     def __init__(self, worldmap=World(), curTime=0, tasks=[]):
         self.tasks = tasks
         self.world = worldmap
@@ -101,10 +99,6 @@ class Solver:
     def taskDistance(self, task1, task2):
         if task1.location == task2.location:
             return 0
-        elif task1 == Solver.START:
-            return self.world.time(self.startLoc, task2.location)
-        elif task2 == Solver.START:
-            return self.world.time(self.startLoc, task1.location)
         else:
             return self.world.time(task1.location, task2.location)
 
@@ -150,7 +144,7 @@ class Solver:
         timeConstraints = []
         firstMoveTime = 0
         for task in self.tasks:
-            firstMoveTime += If(self.taskVars[task][0], self.taskDistance(Solver.START, task), 0)
+            firstMoveTime += If(self.taskVars[task][0], self.world.time(self.startLoc, task.location), 0)
         firstVar = z3.Int("TimeToFirstNode")
         timeConstraints.append(firstVar == firstMoveTime)
         self.timeVars = [firstVar]
