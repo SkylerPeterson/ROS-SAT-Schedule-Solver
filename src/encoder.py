@@ -57,6 +57,7 @@ class Solver:
                 print "Missed deadline for task " + task.name
                 self.giveUpTask(task)
 
+    def extractSolution(self):
         if self.debugPrint:
             print "clauses are: " + str(self.solver)
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
