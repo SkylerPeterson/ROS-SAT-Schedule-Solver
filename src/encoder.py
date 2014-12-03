@@ -57,22 +57,17 @@ class Solver:
                 print "Missed deadline for task " + task.name
                 self.giveUpTask(task)
 
-    def extractSolution(self, debugPrint=False):
-        if debugPrint:
+        if self.debugPrint:
             print "clauses are: " + str(self.solver)
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
-        if debugPrint:
+        if self.debugPrint:
             print "hardClauses: " + str(hardClauses)
         hardModel = maxSAT(self.solver, [(clause, 1) for clause in hardClauses], debugPrint=debugPrint)
-        if debugPrint:
-            print "hardModel: " + str(hardModel)
         acceptedHards = [clause for clause in hardClauses if z3.is_true(hardModel[clause])]
         self.solver.add(*acceptedHards)
-        model = maxSAT(self.solver, [(v[-1], k.weight) for k,v in self.taskVars.items()\
-                                     if k.weight != 0],debugPrint=debugPrint)
-        if debugPrint:
-            print "model: " + str(model)
         path = self.getPath(model)
+        solution = self.maxSAT(self.solver, [(v[-1], k.weight) for k,v in self.taskVars.items()\
+                                             if k.weight != 0])
         print "Found path " + str([str(task) for task in path])
         return path
 
@@ -94,7 +89,7 @@ class Solver:
         self.addUniqueTaskStepConstraint()
         self.addTimeVars()
         self.addTaskConstraints()
-        return self.extractSolution(debugPrint)
+        return self.extractSolution()
 
     def taskDistance(self, task1, task2):
         if task1.location == task2.location:
