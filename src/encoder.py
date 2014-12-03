@@ -24,9 +24,10 @@ class World:
 # For debugging purposes
 T1 = Task(0, 20, "kitchen", 0, "check-for-food")
 T2 = Task(0, 30, "lab", 0, "check-for-pizza")
-T3 = Task(0, 30, "CSE315", 0, "check-for-cookies")
-T4 = Task(2, 20, "2nd-floor", 0, "check-for-tacos")
-T5 = Task(3, 40, "CSE546", 0, "demand-cookies")
+T3 = Task(0, 40, "CSE315", 0, "check-for-cookies")
+T4 = Task(2, 60, "2nd-floor", 0, "check-for-tacos")
+T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
+T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
 
 class Solver:
     START = Task(0,0,"",0,"Start")
