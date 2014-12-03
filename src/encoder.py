@@ -16,13 +16,16 @@ class Task:
     # multiple ways to get the most hard tasks, and one of them would
     # allow more soft tasks.
     #
-    # deadline: The time, in global time, by which this task must be
-    # completed. Global time can be relative to anything, as long as
-    # it is consistent across calls, and uses the same time units as
-    # all other time based numbers, like task duration and travel
-    # time.  As far as the solver is concerned, not getting a task
-    # done before it's deadline is the same as not getting it done at
-    # all.
+    # intervals: A list of pairs, where each pair cooresponds to an
+    # interval in which the task can be completed. The first element
+    # of the interval is the global time at which the interval starts,
+    # and the second element is the global time at which the interval
+    # ends. Global time can be relative to anything, as long as it is
+    # consistent across calls, and uses the same time units as all
+    # other time based numbers, like task duration and travel time.
+    # As far as the solver is concerned, not getting a task done
+    # during one of it's intervals is the same as not getting it done
+    # at all.
     #
     # location: The location tag at which this task must be done.
     # these tags can be anything, as long as they are comparable with
@@ -36,15 +39,23 @@ class Task:
     #
     # name: A string name of the task. This is not used for anything,
     # but exists for convenience.
-    def __init__(self, weight, deadline, location, taskID, name):
+
+    def __init__(self, weight, intervals, location, taskID, name):
         self.weight = weight
-        self.deadline = deadline
+        assert(isinstance(intervals, list))
+        self.intervals = intervals
         self.location = location
         self.ID = taskID
         self.name = name
 
     def __str__(self):
         return self.name
+
+# A task class for specifying deadlines intstead of intervals.
+class DeadlineTask(Task):
+    def __init__(self, weight, deadline, location, taskID, name):
+        assert(isinstance(deadline, int))
+        super.__init__(weight, [(0,deadline)], location, taskID, name)
 
 class World:
     # Get the time between two locations. Generally this should be
@@ -60,12 +71,12 @@ class World:
         return 10
 
 # For debugging purposes
-T1 = Task(0, 20, "kitchen", 0, "check-for-food")
-T2 = Task(0, 30, "lab", 0, "check-for-pizza")
-T3 = Task(0, 40, "CSE315", 0, "check-for-cookies")
-T4 = Task(2, 60, "2nd-floor", 0, "check-for-tacos")
-T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
-T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
+T1 = Task(0, [(30,40),(80,90)], "kitchen", 0, "check-for-food")
+T2 = Task(0, [(70,80)], "lab", 0, "check-for-pizza")
+# T3 = Task(0, 40, "CSE315", 0, "check-for-cookies")
+# T4 = Task(2, 60, "2nd-floor", 0, "check-for-tacos")
+# T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
+# T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
 
 class Solver:
 
@@ -103,12 +114,6 @@ class Solver:
     def finishTask(self, task):
         self.tasks.remove(task)
 
-    # Remove a task from the solver because it can no longer be
-    # completed.
-    def giveUpTask(self, task):
-        print "Giving up on task " + task.name
-        self.finishTask(task)
-
     # Update the current global time of the Solver. The client should
     # never have to call this directly. See note about global time in
     # Task constructor.
@@ -116,14 +121,20 @@ class Solver:
         amount = curTime - self.globalTime
         self.globalTime = curTime
         for task in tasks:
-            # Move all tasks deadlines up by the amount of time that
+            # Move all tasks intervals up by the amount of time that
             # has passed.
-            task.deadline -= amount
-            if task.deadline < self.world.duration(task.ID):
+            lastDeadline = None
+            newIntervals = []
+            for start, end in task.intervals:
+                newIntervals.append(start - amount, end - amount)
+                if lastDeadline == None or end > lastDeadline:
+                    lastDeadline = end
+            task.intervals = newIntervals
+            if lastDeadline < self.world.duration(task.ID):
                 # If we don't have enough time to accomplish the task
                 # anymore, give up on it.
-                print "Missed deadline for task " + task.name
-                self.giveUpTask(task)
+                print "Missed last interval for task " + task.name
+                self.finishTask(task)
 
     # Extracts the best solution once all the hard-hard constraints
     # have been set up. Hard-hard constraints are all the constraints
@@ -132,7 +143,7 @@ class Solver:
         if self.debugPrint:
             print "clauses are: " + str(self.solver)
 
-        # The variables cooresponding to the hard tasks.
+        # The variables cooresponding ;to the hard tasks.
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
 
         if self.debugPrint:
@@ -162,12 +173,16 @@ class Solver:
         return path
 
     # Given a solution, extract an path, which is a list of
-    # instructions for the agent.
+    # instructions for the agent. Task objects indicate the agent
+    # should do that task, and integers indicate the agent should wait
+    # that amount of time.
     def getPath(self, solution):
         path = []
         # For each time step, add the task that is accomplished at
         # that time step, if it exists.
         for t in range(len(self.tasks)):
+            if solution["waitBefores"][t] != 0:
+                path.append(solution["waitBefores"][t])
             for task in self.tasks:
                 if solution[task][t]:
                     path.append(task)
@@ -277,11 +292,21 @@ class Solver:
             # a particular time.
             taskAtTimes = []
             for t in range(len(self.tasks)):
+                intervalVars = []
+                # Did we do the task in any of our intervals?
+                for i, (start, end) in enumerate(task.intervals):
+                    # Create a variable for getting done in the interval.
+                    intervalVar = z3.Bool(str(task) + "@" + str(t) + "_for_" + str(i))
+                    # The task must be contained within the interval.
+                    htConstraints.append(Or(Not(intervalVar),\
+                                            self.timeVars[t] >= start))
+                    htConstraints.append(Or(Not(intervalVar),\
+                                            self.timeVars[t] + self.world.duration(task.ID) <= end))
+                    intervalVars.append(intervalVar)
                 # For a task to get done at a particular time, that
-                # time must occur so that the tasks duration can pass,
-                # and we're still in time for the tasks deadline.
-                htConstraints.append(Or(Not(self.taskVars[task][t]), \
-                                        self.timeVars[t] + self.world.duration(task.ID) <= task.deadline))
+                # time must be within one of our intervals.
+                htConstraints.append(Or(Not(self.taskVars[task][t]),\
+                                        *intervalVars))
                 taskAtTimes.append(self.taskVars[task][t])
             # For a task to get done at all, it has to get done at
             # some time.
@@ -332,7 +357,17 @@ class Solver:
     # each step.
     def addTimeVars(self):
         timeConstraints = []
-        firstMoveTime = 0
+        self.waitBefores = []
+        # Create the wait before variables, which indicate, at each
+        # time step t, how much time should be waited before starting
+        # that time step. This value must be non-negative.
+        for t in range(len(self.tasks)):
+            self.waitBefores.append(z3.Int("waitBefore"+str(t)))
+            self.solver.add(self.waitBefores[t] >= 0)
+        if len(self.tasks) == 0:
+            firstMoveTime = 0
+        else:
+            firstMoveTime = self.waitBefores[0]
         # The firstMoveTime is the time it takes to get to the first
         # location. Add a constraint for each location that could
         # possibly come first, that if it does come first, add the
@@ -347,7 +382,7 @@ class Solver:
         # For each time step, create a new time variable.
         for t in range(len(self.tasks) - 1):
             # Start with the time variable from the previous iteration.
-            time = self.timeVars[t]
+            time = self.timeVars[t] + self.waitBefores[t+1]
             # This little while loop trick allows us to get every pair
             # of tasks.
             tasksLeft = list(self.tasks)
@@ -462,6 +497,9 @@ class Solver:
             solution[key] = {}
             for index, var in varTable.items():
                 solution[key][index] = z3.is_true(solverModel[var])
+        solution["waitBefores"] = {}
+        for t in range(len(self.tasks)):
+            solution["waitBefores"][t] = solverModel[self.waitBefores[t]].as_long()
         return solution
 
     # Print the solution object, by printing all the bindings that it
