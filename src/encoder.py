@@ -63,20 +63,21 @@ class Solver:
         hardClauses = [v[-1] for k,v in self.taskVars.items() if k.weight == 0]
         if self.debugPrint:
             print "hardClauses: " + str(hardClauses)
-        hardModel = maxSAT(self.solver, [(clause, 1) for clause in hardClauses], debugPrint=debugPrint)
-        acceptedHards = [clause for clause in hardClauses if z3.is_true(hardModel[clause])]
+        hardSolution = self.maxSAT(self.solver, [(clause, 1) for clause in hardClauses])
+        acceptedHards = [v[-1] for k,v in self.taskVars.items()\
+                         if k.weight == 0 and hardSolution[k][-1]]
         self.solver.add(*acceptedHards)
-        path = self.getPath(model)
         solution = self.maxSAT(self.solver, [(v[-1], k.weight) for k,v in self.taskVars.items()\
                                              if k.weight != 0])
+        path = self.getPath(solution)
         print "Found path " + str([str(task) for task in path])
         return path
 
-    def getPath(self, model):
+    def getPath(self, solution):
         path = []
         for t in range(len(self.tasks)):
             for task in self.tasks:
-                if z3.is_true(model[self.taskVars[task][t]]):
+                if solution[task][t]:
                     path.append(task)
         return path
 
@@ -103,8 +104,8 @@ class Solver:
         for task in self.tasks:
             self.taskVars[task] = {-1:z3.Bool(str(task))}
             for t in range(len(self.tasks)):
-                taskName = str(task) + "@" + str(t)
-                self.taskVars[task][t] = z3.Bool(taskName)
+                taskVarName = str(task) + "@" + str(t)
+                self.taskVars[task][t] = z3.Bool(taskVarName)
         if self.debugPrint:
             print "Created Task Variables: " + str(self.taskVars)
 
@@ -115,7 +116,16 @@ class Solver:
             while len(tasksLeft) > 0:
                 task = tasksLeft.pop()
                 for otherTask in tasksLeft:
-                    uniqueTaskStepConstraints.append(Or(Not(self.taskVars[task][t]), Not(self.taskVars[otherTask][t])))
+                    uniqueTaskStepConstraints.append(Or(Not(self.taskVars[task][t]), \
+                                                        Not(self.taskVars[otherTask][t])))
+        for task in self.tasks:
+            timesLeft = range(len(self.tasks))
+            while len(timesLeft) > 0:
+                time = timesLeft.pop()
+                for otherTime in timesLeft:
+                    uniqueTaskStepConstraints.append(Or(Not(self.taskVars[task][time]),\
+                                                        Not(self.taskVars[task][otherTime])))
+
         for constraint in uniqueTaskStepConstraints:
             self.solver.add(constraint)
         if self.debugPrint:
@@ -135,6 +145,25 @@ class Solver:
 
         if self.debugPrint:
             print "Added hard task constraints: " + str(htConstraints)
+
+    def addStepCompressedConstraints(self):
+        self.noneVars = []
+        clauses = []
+        for i in range(len(self.tasks)):
+            self.noneVars.append(z3.Bool("None@"+str(i)))
+            clauses.append(Or(self.noneVars[i],\
+                              *[varTable[i] for var, varTable in self.taskVars.items()]))
+        for t in range(len(self.tasks)):
+            for taskVar, varTable in self.taskVars.items():
+                clauses.append(Or(Not(self.noneVars[t]),\
+                                  Not(varTable[t])))
+        for i in range(len(self.tasks)):
+            for j in range(i+1, len(self.tasks)):
+                clauses.append(Or(Not(self.noneVars[i]), self.noneVars[j]))
+        for clause in clauses:
+            if self.debugPrint:
+                print "adding clause " + str(clause)
+            self.solver.add(clause)
 
     def addTimeVars(self):
         timeConstraints = []
@@ -164,31 +193,64 @@ class Solver:
         if self.debugPrint:
             print "Added time constraints: " + str(timeConstraints)
 
-## All hard clauses should have already been added to the solver.
-def maxSAT(solver, var_weight_pairs, debugPrint=False):
-    min_cost = None
-    best_model = None
-    conflictVars = []
-    softVars = [v for v, weight in var_weight_pairs]
-    solver_result = solver.check()
-    while(solver_result == z3.sat):
-        cost = 0
-        model = solver.model()
-        for var, weight in var_weight_pairs:
-            if z3.is_false(model[var]):
-                cost += weight
-        if min_cost == None or cost < min_cost:
-            min_cost = cost
-            best_model = model
-        fresh_var_name = "block"
-        interp = [v for v in softVars if z3.is_false(model[v])]
-        for v in interp:
-            fresh_var_name += "_" + str(v)
-        fresh_var = z3.Bool(fresh_var_name)
-        solver.add(Or(Not(fresh_var), *interp))
-        conflictVars.append(fresh_var)
-        solver_result = solver.check(*conflictVars)
-    if debugPrint:
-        print "best model was " + str(best_model)
-        print "with cost " + str(min_cost)
-    return best_model
+    ## All hard clauses should have already been added to the solver.
+    def maxSAT(self, solver, var_weight_pairs):
+        min_cost = None
+        best_solution = None
+        conflictVars = []
+        next_solver_result = solver.check(*conflictVars)
+        while(next_solver_result == z3.sat):
+            cost = 0
+            model = solver.model()
+            for var, weight in var_weight_pairs:
+                if self.debugPrint:
+                    print "adding cost of " + str(var) + ": " + str(weight) + " * "\
+                        + str(not z3.is_false(model[var]))
+                if z3.is_false(model[var]):
+                    cost += weight
+            solution = self.modelToSolution(model)
+
+            if min_cost == None or cost < min_cost:
+                min_cost = cost
+                best_solution = solution
+
+            if self.debugPrint:
+                print "found solution: "
+                self.printSolution(solution)
+                print "with cost " + str(cost)
+
+            fresh_var_name = "block"
+            interp = [v for v,w in var_weight_pairs \
+                      if z3.is_false(model[v])]
+            for v in interp:
+                fresh_var_name += "_" + str(v)
+            fresh_var = z3.Bool(fresh_var_name)
+            block_constraint = Or(Not(fresh_var), *interp)
+            if self.debugPrint:
+                print "adding block constraint " + str(block_constraint)
+            solver.add(block_constraint)
+            conflictVars.append(fresh_var)
+            next_solver_result = solver.check(*conflictVars)
+        if self.debugPrint:
+            print "best solution was "
+            self.printSolution(best_solution)
+            print "with cost " + str(min_cost)
+        return best_solution
+
+    def modelToSolution(self, solverModel):
+        solution = {}
+        for key, varTable in self.taskVars.items():
+            solution[key] = {}
+            for index, var in varTable.items():
+                solution[key][index] = z3.is_true(solverModel[var])
+        solution["None"]={}
+        for t in range(len(self.noneVars)):
+            solution["None"][t] = not z3.is_false(solverModel[self.noneVars[t]])
+        return solution
+
+    def printSolution(self, solution):
+        for key, varTable in self.taskVars.items():
+            for index, var in varTable.items():
+                print str(var) + ": " + str(solution[key][index])
+        for t in range(len(self.noneVars)):
+            print "None" + str(t) + ": " + str(solution["None"][t])
