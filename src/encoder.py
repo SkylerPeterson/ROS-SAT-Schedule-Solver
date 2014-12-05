@@ -181,10 +181,10 @@ class Solver:
         # For each time step, add the task that is accomplished at
         # that time step, if it exists.
         for t in range(len(self.tasks)):
-            if solution["waitBefores"][t] != 0:
-                path.append(solution["waitBefores"][t])
             for task in self.tasks:
                 if solution[task][t]:
+                    if solution["waitBefores"][t] != 0:
+                        path.append(solution["waitBefores"][t])
                     path.append(task)
         return path
 
