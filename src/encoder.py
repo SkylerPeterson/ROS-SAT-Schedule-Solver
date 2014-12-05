@@ -344,9 +344,8 @@ class Solver:
         # If any none variable is true, then the one after it is
         # true. Because of transitivity, this means that all none
         # variables after it are true.
-        for i in range(len(self.tasks)):
-            for j in range(i+1, len(self.tasks)):
-                clauses.append(Or(Not(self.noneVars[i]), self.noneVars[j]))
+        for i in range(len(self.tasks) - 1):
+            clauses.append(Or(Not(self.noneVars[i]), self.noneVars[i+1]))
 
         for clause in clauses:
             if self.debugPrint:
