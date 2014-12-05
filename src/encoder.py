@@ -73,8 +73,8 @@ class World:
 # For debugging purposes
 T1 = Task(0, [(30,40),(80,90)], "kitchen", 0, "check-for-food")
 T2 = Task(0, [(70,80)], "lab", 0, "check-for-pizza")
-# T3 = Task(0, 40, "CSE315", 0, "check-for-cookies")
-# T4 = Task(2, 60, "2nd-floor", 0, "check-for-tacos")
+T3 = Task(2, [(40,50)], "CSE315", 0, "check-for-cookies")
+T4 = Task(3, [(60,90)], "2nd-floor", 0, "check-for-tacos")
 # T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
 # T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
 
@@ -181,10 +181,10 @@ class Solver:
         # For each time step, add the task that is accomplished at
         # that time step, if it exists.
         for t in range(len(self.tasks)):
-            if solution["waitBefores"][t] != 0:
-                path.append(solution["waitBefores"][t])
             for task in self.tasks:
                 if solution[task][t]:
+                    if solution["waitBefores"][t] != 0:
+                        path.append(solution["waitBefores"][t])
                     path.append(task)
         return path
 
@@ -344,9 +344,8 @@ class Solver:
         # If any none variable is true, then the one after it is
         # true. Because of transitivity, this means that all none
         # variables after it are true.
-        for i in range(len(self.tasks)):
-            for j in range(i+1, len(self.tasks)):
-                clauses.append(Or(Not(self.noneVars[i]), self.noneVars[j]))
+        for i in range(len(self.tasks) - 1):
+            clauses.append(Or(Not(self.noneVars[i]), self.noneVars[i+1]))
 
         for clause in clauses:
             if self.debugPrint:
