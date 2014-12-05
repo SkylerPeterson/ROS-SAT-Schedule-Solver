@@ -73,8 +73,8 @@ class World:
 # For debugging purposes
 T1 = Task(0, [(30,40),(80,90)], "kitchen", 0, "check-for-food")
 T2 = Task(0, [(70,80)], "lab", 0, "check-for-pizza")
-# T3 = Task(0, 40, "CSE315", 0, "check-for-cookies")
-# T4 = Task(2, 60, "2nd-floor", 0, "check-for-tacos")
+T3 = Task(2, [(40,50)], "CSE315", 0, "check-for-cookies")
+T4 = Task(3, [(60,90)], "2nd-floor", 0, "check-for-tacos")
 # T5 = Task(3, 80, "CSE546", 1, "demand-cookies")
 # T6 = Task(2, 80, "benson-store", 0, "check-for-chips")
 
