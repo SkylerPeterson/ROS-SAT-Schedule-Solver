@@ -1,0 +1,61 @@
+\documentclass{article}
+\title{Optimal Dub-E Scheduling}
+\author{Skyler Peterson, Alex Sanchez-Stern}
+
+\begin{document}
+\maketitle
+\section{Introduction}
+For our final project,
+we decided to look to robotics
+for problems that SMT might be able to tackle.
+Since we are fortunate enough to be at a school
+where there is always interesting work going on across fields,
+we didn't have to look far.
+We contacted Michael Jae-Yoon Chung and Andrzej Pronobis,
+who are working on the Semantics Aware Robotic Assistant,
+more commonly known as DUB-E.
+DUB-E is able to traverse the CSE building,
+and accomplish tasks for it's users,
+such as checking whether a particular professor is in their office.
+DUB-E is controlled via a web interface,
+from which users can request that certain tasks be accomplished,
+by a particular deadline.
+Unfortunately, when deadlines are short
+and there are many tasks to accomplish,
+it is non-trivial to decide what task
+should be accomplished when.
+Additionally, the expressive power of the interface to DUB-E
+is currently limited;
+Users can specify a tasks deadline,
+but cannot specify more precise timing information,
+such as a time in the future
+before which the task should not be done,
+or multiple time periods in which a task can be accomplished.
+\section{Overview}
+\section{Scheduler Encoding}
+\section{Results}
+\section{Project Division}
+We roughly divided the work into the encoding,
+and the interface with DUB-E.
+Skyler handled the interface with the robot,
+setting up ROS nodes and working with Michael and Andrzej
+to get the encoder integrated
+into the DUB-E codebase.
+Alex handled the actual encoding of the task constraints,
+setting up the Z3 bindings to interface with the code,
+and writing modules to take in task information,
+encode it into a set of Z3 constraints,
+decode the Z3 output into a schedule,
+and format the schedule for DUB-E.
+\section{Applied Topics}
+This project involved mostly topics
+that we discussed at the beginning of the quarter,
+although it of course was supported by
+the work we did throughout the quarter.
+Specifically, the work on encoding different types of constraints
+into conjunctive normal form was paramount to the project.
+The encoding also made heavy use of MaxSAT,
+which we touched on in class,
+to satisfy the greatest number of tasks
+in cases where not all tasks could be satisfied.
+\end{document}
