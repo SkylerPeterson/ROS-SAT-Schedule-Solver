@@ -20,6 +20,7 @@ such as checking whether a particular professor is in their office.
 DUB-E is controlled via a web interface,
 from which users can request that certain tasks be accomplished,
 by a particular deadline.
+
 Unfortunately, when deadlines are short
 and there are many tasks to accomplish,
 it is non-trivial to decide what task
@@ -31,7 +32,74 @@ but cannot specify more precise timing information,
 such as a time in the future
 before which the task should not be done,
 or multiple time periods in which a task can be accomplished.
+
+Handling these new scheduling concerns
+requires a more sophisticated scheduling algorithm
+than the one that was previously implemented in DUB-E.
+We implemented this new scheduling algorithm
+by encoding the scheduling constraints into SMT,
+and then using Z3 as a backend
+to solve the constraints.
+The result is a schedule which instructs DUB-E
+when to tackle each task and,
+in some cases,
+how long to wait in between tasks.
 \section{Overview}
+DUB-E's overall behavior is quite simple.
+It is notified of new tasks via the web interface,
+and it's scheduler decides what tasks to do when.
+Each time it receives a new task,
+it can change how it schedules it's current tasks.
+Tasks which are completed are removed from it's schedule,
+but not all tasks get completed.
+If DUB-E is overscheduled,
+it may not have enough time to complete a requested task in time.
+Additionally, the travel time of DUB-E
+is not entirely predictable.
+While it's travel time between two locations
+can mostly be bounded within a range,
+it is always possible that it will completely fail,
+and take much longer to reset itself
+and become fully operational again.
+
+The previous scheduling algorithm
+for DUB-E was quite simple.
+DUB-E simple maintained a FIFO queue
+upon which it's tasks resided.
+New requests made via the web interface
+are added to the end of the queue,
+and when DUB-E is not currently working on a task,
+it pulls the next task from the front of the queue.
+When DUB-E pulls a task from the queue
+whose deadline has already passed,
+it notifies the user that it was unable to complete the task,
+and drops it from the queue.
+While simple and fair,
+this algorithm fails to provide
+optimal behavior in a variety of simple scenarios.
+
+Consider the case where user one
+requests that DUB-E go the kitchen
+and check for food
+within the next thirty five minutes.
+Let's assume that it takes DUB-E fifteen minutes
+to complete this task,
+ten minutes to go to the kitchen,
+five to check for food.
+The, user two requests that DUB-E
+check whether Emina Torlak is in her office,
+within the next twenty minutes.
+It takes again, fifteen minutes total
+for DUB-E to complete the task,
+ten to arrive at Emina's office,
+and five to confirm whether or not she is there.
+If DUB-E addresses the tasks in a first come, first serve order,
+as the old scheduler would do,
+by the time it had finished checking for food,
+it would have missed the deadline for finding Emina.
+If instead it had reordered the tasks,
+checking for Emina first,
+it would be able to accomplish both tasks on time.
 \section{Scheduler Encoding}
 \section{Results}
 \section{Project Division}
