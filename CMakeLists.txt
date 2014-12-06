@@ -57,6 +57,8 @@ add_service_files(
   FILES
   SAT_Scheduler.srv
   ScheduleAllQueryJobs.srv
+  SAT_World_Map_Duration.srv
+  SAT_World_Map_Time.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -7,6 +7,9 @@
 # Imports
 # ######################################################################
 
+# ROS
+import rospy
+
 # System built-ins
 import argparse
 import random
@@ -15,6 +18,12 @@ import unittest
 # SARA
 from bson.objectid import ObjectId
 from pymongo import MongoClient
+
+# services
+from sat_schedule_solver.srv import (
+    SAT_World_Map_Duration,
+    SAT_World_Map_Time
+)
 
 
 # ######################################################################
@@ -74,3 +83,28 @@ class TestQueryJobStore(unittest.TestCase):
                     print self._db.drop_collection(self._collname)
                 print self._client.drop_database(self._dbname)
             print self._client.close()
+
+
+class TestSingleTaskWorldmap():
+    def __init__(self, locationName, taskName):
+        #rospy.init_node('TestSingleTaskWorldmap', anonymous=True)
+        # Setup services and messages
+        self.SAT_World_Time = rospy.Service("/SAT_World_Map_Time",
+                                   SAT_World_Map_Time,
+                                   self.handletime)
+        self.SAT_World_Duration = rospy.Service("/SAT_World_Map_Duration",
+                                   SAT_World_Map_Duration,
+                                   self.handleduration)
+        # Setup hashmaps
+        self.locationMap = {('startPos', locationName) : 400}
+        self.durationMap = {taskName : 100}
+    
+    def handletime(self, req):
+        return self.locationMap[(req.locationA, req.locationB)]
+    
+    def handleduration(self, req):
+        return self.durationMap[req.taskID]
+        
+    def shutdown(self):
+        self.SAT_World_Time.shutdown()
+        self.SAT_World_Duration.shutdown()

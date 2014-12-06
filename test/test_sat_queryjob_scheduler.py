@@ -19,6 +19,7 @@ from sara_queryjob_manager.msg import QueryJobStatus, RunQueryAction
 from sara_queryjob_manager.srv import ScheduleQueryJob
 from sara_queryjob_manager.simpler_action_server import SimplerActionServer
 from testutils import random_unix_epoch
+from testutils import TestSingleTaskWorldmap
 
 
 # ######################################################################
@@ -46,9 +47,9 @@ def test_sat_schedule_single_item(self):
     deadline_int = timeissued_int + 100
     deadline = dt.utcfromtimestamp(deadline_int).replace(tzinfo=utc)
     priority = 0
-    #TODO: add a test rooms/task generator
     location = 'Room01'
     taskId = 'Task01'
+    self.world = TestSingleTaskWorldmap(location, taskId)
     queryjob_id = self._collection.insert({"dummy": None,
                                            "deadline": deadline,
                                            "priority": priority,
@@ -81,6 +82,9 @@ def test_sat_schedule_single_item(self):
         loopCount += 1
     
     self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
+    
+    # Shutdown the worldmap test service class so not to intefere with other tests.
+    self.world.shutdown()
 
         
 def test_sat_schedule_multiple_items(self):
