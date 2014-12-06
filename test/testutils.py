@@ -104,7 +104,7 @@ class TestSingleTaskWorldmap():
     
     def handleduration(self, req):
         return self.durationMap[req.taskID]
-        
+    
     def shutdown(self):
         self.SAT_World_Time.shutdown()
         self.SAT_World_Duration.shutdown()

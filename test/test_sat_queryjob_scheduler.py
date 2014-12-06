@@ -18,6 +18,7 @@ import random
 from sara_queryjob_manager.msg import QueryJobStatus, RunQueryAction
 from sara_queryjob_manager.srv import ScheduleQueryJob
 from sara_queryjob_manager.simpler_action_server import SimplerActionServer
+from visualizer import createGraphVisualization
 from testutils import random_unix_epoch
 from testutils import TestSingleTaskWorldmap
 
@@ -83,6 +84,7 @@ def test_sat_schedule_single_item(self):
     
     self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
     
+    createGraphVisualization()
     # Shutdown the worldmap test service class so not to intefere with other tests.
     self.world.shutdown()
 
