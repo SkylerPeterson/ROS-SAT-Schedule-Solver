@@ -100,8 +100,42 @@ it would have missed the deadline for finding Emina.
 If instead it had reordered the tasks,
 checking for Emina first,
 it would be able to accomplish both tasks on time.
+
+The DUB-E scheduling problem is not simply
+a classic instance of scheduling
+where each task takes a fixed amount of time.
+Consider the case where DUB-E
+is requested to check for both Emina and Zach Tatlock
+in their respective offices.
+It might be the case that both requests
+should be completed in 18 minutes.
+If DUB-E is in another part of the building,
+it might take five minutes to get to both offices,
+and take five minutes to check them.
+Taken seperately, each request takes ten minutes,
+and it is not possible to do both,
+since it would take twenty minutes to do both individually.
+But Zach's and Emina's offices are only a minute apart,
+both being on the fifth floor,
+it actually is possible to complete both tasks,
+since one can go to one office, complete the task,
+and travel to the other one,
+in only eleven minutes.
+Completing the second task takes a further five minutes,
+for a total time of sixteen minutes,
+well within the deadline.
+
+It is clear from this example that
+a proper scheduling algorithm must consider spatial factors,
+as well as temporal ones.
+And while the above are fairly simple examples,
+in the presence of multiple intervals
+and complex task interactions,
+the scheduling problem becomes quite complex.
 \section{Scheduler Encoding}
+
 \section{Results}
+
 \section{Project Division}
 We roughly divided the work into the encoding,
 and the interface with DUB-E.
@@ -115,6 +149,7 @@ and writing modules to take in task information,
 encode it into a set of Z3 constraints,
 decode the Z3 output into a schedule,
 and format the schedule for DUB-E.
+
 \section{Applied Topics}
 This project involved mostly topics
 that we discussed at the beginning of the quarter,
