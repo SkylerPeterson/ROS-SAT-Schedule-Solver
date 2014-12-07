@@ -13,6 +13,7 @@ from sat_schedule_solver.srv import (
 from sat_schedule_solver.msg import (
     datetimemsg
 )
+from SATModeler import readDatetimeMsg
 from sara_queryjob_manager.msg import (
     QueryJobStatus, QueryJobUpdate
 )
@@ -66,16 +67,19 @@ class SATModelerAPISara():
         return resp
         
     def publishUpdates(self, acceptedJobList, cancelledJobList):
-        queue = []
         order = 1  # order starts from 1
         for q in acceptedJobList:
             queryjob_id = q["_id"]
             query = {"_id": queryjob_id}
-            update = {"$set": {
-                "order": order,
-                "status": SCHEDULED
-            }}
-            if not self._collection.find_and_modify(query, update):
+            if self._collection.find(query):
+                update = {"$set": {
+                    "order": order,
+                    "status": SCHEDULED
+                }}
+                if not self._collection.find_and_modify(query, update):
+                    rospy.logerr("Error while writing schedule results!")
+                    rospy.signal_shutdown("Bye!")
+            else:
                 rospy.logerr("Error while writing schedule results!")
                 rospy.signal_shutdown("Bye!")
 
@@ -85,9 +89,8 @@ class SATModelerAPISara():
             msg.field_names = ["order", "status"]
             self._pub.publish(msg)
 
-            queue.append(queryjob_id)
             order += 1
-        
+            
         for q in cancelledJobList:
             queryjob_id = q["_id"]
             query = {"_id": queryjob_id}
@@ -105,7 +108,6 @@ class SATModelerAPISara():
             msg.field_names = ["order", "status"]
             self._pub.publish(msg)
             
-            queue.append(queryjob_id)
     
     def scheduleJobs(self, rawJobList):
         count = 0
@@ -147,10 +149,19 @@ class SATModelerAPISara():
         
         acceptedJobList = []
         cancelledJobList = []
-        for job in newJobList:
-            if str(job['_id']) in resp.acceptedJobID:
-                acceptedJobList.append(job)
-            else:
+        for i in range(0, resp.numJobsAccepted):
+            if (resp.acceptedJobID[i].split(':')[0] == 'wait'):
+                self._collection.insert({"endtime": readDatetimeMsg(resp.jobEndTime[i]),
+                                         "taskId": resp.acceptedJobID[i]})
+                acceptedJobList.append(self._collection.find({"taskId": resp.acceptedJobID[i]})[0])
+                continue
+            found = False
+            for job in newJobList:
+                if (resp.acceptedJobID[i] == str(job['_id'])):
+                    acceptedJobList.append(job)
+                    found = True
+                    break
+            if not found:
                 cancelledJobList.append(job)
         return acceptedJobList, cancelledJobList
         

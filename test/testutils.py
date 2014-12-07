@@ -132,6 +132,8 @@ class TestWorldmap():
         return self.locationMap[(locationA, locationB)]
         
     def getTaskTime(self, task):
+        if task is None:
+            return 0
         return self.durationMap[task]
     
     def shutdown(self):

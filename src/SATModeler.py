@@ -4,7 +4,7 @@ roslib.load_manifest('rospy')
 
 import rospy
 from encoder import Solver, Task
-from datetime import datetime
+from datetime import datetime, timedelta
 from calendar import isleap
 from pytz import utc
 from math import floor, ceil
@@ -62,13 +62,14 @@ class SATModeler():
         
         resp = SAT_SchedulerResponse()
         resp.header.seq = req.header.seq
-        resp.header.stamp = rospy.Time.now()
+        resp.header.stamp.secs = (now - datetime(1970,1,1).replace(tzinfo=utc)).total_seconds()
+        resp.header.stamp.nsecs = 0
         resp.header.frame_id = "/SAT/Scheduler/Output"
         resp.numJobsAccepted = len(taskList)
         prevLocation = 'startPos'
         for i in range(0, resp.numJobsAccepted):
             if isinstance(taskList[i], ( int, long )):
-                resp.acceptedJobID.append("wait")
+                resp.acceptedJobID.append('wait:' + prevLocation)
                 resp.jobEndTime.append(addTimes(datetime.utcfromtimestamp(taskList[i]), now))
             elif isinstance(taskList[i], Task):
                 resp.acceptedJobID.append(taskList[i].name)

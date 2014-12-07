@@ -80,11 +80,12 @@ def test_sat_schedule_single_task_single_location(self):
         if qr[0]["status"] == QueryJobStatus.RUNNING:
             break
         rospy.sleep(0.1)
+        server.succeed()
         loopCount += 1
     
     self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
     
-    # createGraphVisualization(world, self._collection.find()) # DEBUG
+    createGraphVisualization(world, self._collection.find()) # DEBUG
     # Shutdown the worldmap test service class so not to intefere with other tests.
     world.shutdown()
 
@@ -142,6 +143,7 @@ def test_sat_schedule_single_task_multiple_locations(self):
         if qr[0]["status"] == QueryJobStatus.RUNNING:
             break
         rospy.sleep(0.1)
+        server.succeed()
         loopCount += 1
     
     self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
@@ -204,43 +206,41 @@ def test_sat_schedule_multiple_tasks_multiple_locations(self):
         # Call service.
         resp = s(queryjob_id_strs[i], timeissued_int[i])
         self.assertTrue(resp.success)
-
+    
     # Check number of documents in DB.
     self.assertEqual(self._collection.find().count(), N)
 
     loopCount = 0
-    r = rospy.Rate(1)
     i = 0
     while (i < N):
         if not server._as.is_active():
-            r.sleep()
+            time.sleep(0.1)
             continue
         queryjob_id = queryjob_ids[i]
         
         # DB state check after the goal is accepted.
         qr = self._collection.find({
             "_id": queryjob_id,
-            "order": {"$exists": True}  # could be renewed to 1
+            "order": {"$exists": True}
         })
         self.assertEqual(qr.count(), 1)
         self.assertEqual(qr[0]["timeissued"].replace(tzinfo=utc), timeissued[i])
         self.assertEqual(qr[0]["deadline"].replace(tzinfo=utc), deadline[i])
         self.assertEqual(qr[0]["priority"], priority[i])
         self.assertEqual(qr[0]["location"], locationsSorted[i])
+        server.succeed() # We need to succeed for the previous wait
         for maxIter in range(0, 100):
             if qr[0]["status"] == QueryJobStatus.RUNNING:
                 break
-            r.sleep()
-        self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING)
+            time.sleep(1)
+        self.assertEqual(qr[0]["status"], QueryJobStatus.RUNNING, "Job not running: " + str(qr[0]))
     
         server.succeed()
-        r.sleep()  # wait until client updates DB
-        # should get notified by topic in future.
-
+        
         # DB state check when done action.
         qr = self._collection.find({
             "_id": queryjob_id,
-            "order": {"$exists": True}  # could be renewed to 1
+            "order": {"$exists": True}
         })
         self.assertEqual(qr.count(), 1)
         self.assertEqual(qr[0]["timeissued"].replace(tzinfo=utc), timeissued[i])
@@ -250,8 +250,8 @@ def test_sat_schedule_multiple_tasks_multiple_locations(self):
         for maxIter in range(0, 100):
             if qr[0]["status"] == QueryJobStatus.SUCCEEDED:
                 break
-            r.sleep()
-        self.assertEqual(qr[0]["status"], QueryJobStatus.SUCCEEDED)
+            time.sleep(1)
+        self.assertEqual(qr[0]["status"], QueryJobStatus.SUCCEEDED, "Job not succeeding: " + str(qr[0]))
         i += 1
     
     createGraphVisualization(world, self._collection.find()) # DEBUG
