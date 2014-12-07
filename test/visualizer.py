@@ -14,7 +14,7 @@ def createGraphVisualization(world, dbData):
         pathEdges.append((curloc, task["location"]))
         curloc = task["location"]
     
-    pos = nx.spring_layout(G) # positions for all nodes
+    pos = nx.circular_layout(G) # positions for all nodes
 
     # nodes
     nx.draw_networkx_nodes(G, pos, node_size=2500, node_color='blue', node_alpha=0.5)

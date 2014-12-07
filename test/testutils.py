@@ -85,8 +85,8 @@ class TestQueryJobStore(unittest.TestCase):
             print self._client.close()
 
 
-class TestSingleTaskWorldmap():
-    def __init__(self, locationName, taskName):
+class TestWorldmap():
+    def __init__(self, locationNames, taskNames, taskTimes=None):
         #rospy.init_node('TestSingleTaskWorldmap', anonymous=True)
         # Setup services and messages
         self.SAT_World_Time = rospy.Service("/SAT_World_Map_Time",
@@ -96,8 +96,25 @@ class TestSingleTaskWorldmap():
                                    SAT_World_Map_Duration,
                                    self.handleDuration)
         # Setup hashmaps
-        self.locationMap = {('startPos', locationName) : 400}
-        self.durationMap = {taskName : 100}
+        self.locationMap = dict()
+        for location in locationNames:
+            startDist = random.choice(range(100,1000))
+            self.locationMap[('startPos', location)] = startDist
+            self.locationMap[(location, 'startPos')] = startDist
+            for locationB in locationNames:
+                if locationB != location:
+                    dist = random.choice(range(100,1000))
+                    if (locationB, location) in self.locationMap:
+                        dist = self.locationMap[(locationB, location)]
+                    self.locationMap[(location, locationB)] = dist
+        
+        self.durationMap = dict()
+        i = 0
+        if taskTimes is None:
+            taskTimes = [100 for x in range(0, len(taskNames))]
+        for task in taskNames:
+            self.durationMap[task] = taskTimes[i]
+            i += 1
     
     def handleTime(self, req):
         return self.locationMap[(req.locationA, req.locationB)]
