@@ -91,19 +91,31 @@ class TestSingleTaskWorldmap():
         # Setup services and messages
         self.SAT_World_Time = rospy.Service("/SAT_World_Map_Time",
                                    SAT_World_Map_Time,
-                                   self.handletime)
+                                   self.handleTime)
         self.SAT_World_Duration = rospy.Service("/SAT_World_Map_Duration",
                                    SAT_World_Map_Duration,
-                                   self.handleduration)
+                                   self.handleDuration)
         # Setup hashmaps
         self.locationMap = {('startPos', locationName) : 400}
         self.durationMap = {taskName : 100}
     
-    def handletime(self, req):
+    def handleTime(self, req):
         return self.locationMap[(req.locationA, req.locationB)]
     
-    def handleduration(self, req):
+    def handleDuration(self, req):
         return self.durationMap[req.taskID]
+        
+    def getGraphEdges(self):
+        return self.locationMap.keys()
+        
+    def getTasks(self):
+        return self.durationMap.keys()
+    
+    def getTravelTime(self, locationA, locationB):
+        return self.locationMap[(locationA, locationB)]
+        
+    def getTaskTime(self, task):
+        return self.durationMap[task]
     
     def shutdown(self):
         self.SAT_World_Time.shutdown()

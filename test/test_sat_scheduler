@@ -13,8 +13,9 @@ import sys
 # Local
 from testutils import TestQueryJobStore
 from test_sat_queryjob_scheduler import (
-    test_sat_schedule_single_item,
-    test_sat_schedule_multiple_items
+    test_sat_schedule_single_task_single_location,
+    test_sat_schedule_single_task_multiple_locations,
+    test_sat_schedule_multiple_tasks_multiple_locations
 )
 
 # ######################################################################
@@ -35,16 +36,22 @@ if __name__ == '__main__':
     args, unknown = parser.parse_known_args()
 
     if args.testcase_id == 0:
-        NAME = "test_sat_schedule_single_item"
+        NAME = "test_sat_schedule_single_task_single_location"
         setattr(TestQueryJobStore,
                 NAME,
-                test_sat_schedule_single_item)
+                test_sat_schedule_single_task_single_location)
         rostest.run(PKG, NAME, TestQueryJobStore)
     elif args.testcase_id == 1:
-        NAME = "test_sat_schedule_multiple_items"
+        NAME = "test_sat_schedule_single_task_multiple_locations"
         setattr(TestQueryJobStore,
                 NAME,
-                test_sat_schedule_multiple_items)
+                test_sat_schedule_single_task_multiple_locations)
+        rostest.run(PKG, NAME, TestQueryJobStore)
+    elif args.testcase_id == 2:
+        NAME = "test_sat_schedule_multiple_tasks_multiple_locations"
+        setattr(TestQueryJobStore,
+                NAME,
+                test_sat_schedule_multiple_tasks_multiple_locations)
         rostest.run(PKG, NAME, TestQueryJobStore)
     else:
         print >> sys.stderr, "unknown testcase_id: {0}".format(

@@ -92,7 +92,7 @@ class SATModelerAPISara():
             queryjob_id = q["_id"]
             query = {"_id": queryjob_id}
             update = {"$set": {
-                "order": order,
+                "order": -1,
                 "status": CANCELLED
             }}
             if not self._collection.find_and_modify(query, update):
