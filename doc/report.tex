@@ -50,8 +50,9 @@ It is notified of new tasks via the web interface,
 and it's scheduler decides what tasks to do when.
 Each time it receives a new task,
 it can change how it schedules it's current tasks.
-Tasks which are completed are removed from it's schedule,
-but not all tasks get completed.
+Tasks which are completed are removed from it's schedule.
+
+But not all tasks get completed.
 If DUB-E is overscheduled,
 it may not have enough time to complete a requested task in time.
 Additionally, the travel time of DUB-E
@@ -64,16 +65,16 @@ and become fully operational again.
 
 The previous scheduling algorithm
 for DUB-E was quite simple.
-DUB-E simple maintained a FIFO queue
+DUB-E simply maintained a FIFO queue
 upon which it's tasks resided.
 New requests made via the web interface
-are added to the end of the queue,
-and when DUB-E is not currently working on a task,
-it pulls the next task from the front of the queue.
-When DUB-E pulls a task from the queue
-whose deadline has already passed,
-it notifies the user that it was unable to complete the task,
-and drops it from the queue.
+were added to the end of the queue,
+and when DUB-E was not currently working on a task,
+it pulled the next task from the front of the queue.
+When DUB-E pulled a task from the queue
+whose deadline had already passed,
+it notified the user that it was unable to complete the task,
+and dropped it from the queue.
 While simple and fair,
 this algorithm fails to provide
 optimal behavior in a variety of simple scenarios.
@@ -128,11 +129,155 @@ well within the deadline.
 It is clear from this example that
 a proper scheduling algorithm must consider spatial factors,
 as well as temporal ones.
-And while the above are fairly simple examples,
-in the presence of multiple intervals
-and complex task interactions,
-the scheduling problem becomes quite complex.
+Additionally, it may be the case that not all tasks can be scheduled,
+and tasks have non-uniform priorities.
+The DUB-E team asked for multiple task priorities,
+that were weighted,
+so that sufficiently many lower priority tasks
+could be chosen over a higher priority task,
+but also had an admin weight
+that would never be dropped in favor of lower tasks.
+
 \section{Scheduler Encoding}
+
+To tackle these unique constraints,
+we had to develop an encoding which could scale fairly well,
+while still supporting all the features the DUB-E team wanted.
+Since tasks can occur at a multitude of times,
+and include times waited between tasks,
+if a task is completed and the next one
+belongs to an interval that has not started,
+a naive approach would be to ask the solver
+to simply give us the times at which each task is done,
+given the problem constraints.
+But solving for this many continious variables
+would not scale to an even reasonable number of tasks.
+Instead, we discretized time into an integer counter,
+simplifying the issue even if we lose a little granularity,
+and we divided the problem space into assignment of tasks
+to ``time steps.''
+
+For finding the optimal schedule of N tasks,
+we attempt to find the best assignment
+of tasks to N timesteps,
+as well as solving for a single integer for each timestep
+indicating how long should be waited before starting that timestep.
+We constrain the solution to this in several ways
+which allow results to be a valid schedule.
+
+Since there exists a boolean variable for
+each task being accomplished at each step,
+we add one-hot constraints
+so that at most one task is scheduled for each step,
+and each task is scheduled for at most one step.
+It might seem like we should require that
+exactly one task be accomplished at each step,
+and each task be accomplished at exactly one step.
+However, it may be the case that
+the tasks are over-constraining,
+and so not all of them can be accomplished.
+To account for this case,
+we must allow for tasks to be not scheduled for any step,
+and for some steps to be empty.
+We create a boolean variable for each timestep t labeled None@t,
+which indicates whether or not \textbf{no} tasks are scheduled at that timestep,
+and require that exactly one of the set of $\{None\} \cup tasksScheduled$
+be true for each timestep.
+
+To make other constraints,
+as well as the resulting schedule,
+simpler,
+we also require that all the None's
+are at the end of the schedule.
+That is, if a timestep has None,
+then all timesteps after it have None,
+forcing all actual tasks to the front of the timesteps.
+
+Now that we've encoded
+the notion of assignment of tasks to timesteps
+into constraints,
+we must encode the timing constraints.
+But how long does traveling between tasks task?
+Due to the unpredictability of the robot and it's environment,
+we don't have a fixed bound on how long traveling between locations will take.
+However, we do have a notion of the longest they should take
+if nothing goes terribly wrong.
+To simplify the scheduling,
+we decided to ask the scheduler to only produce
+schedules where DUB-E will always have enough travel time
+if nothing goes terribly wrong.
+If something \textit{does} go terribly wrong,
+and DUB-E falls behind schedule,
+we reschedule.
+Here, we slightly comprimise on optimality,
+but we hope that the failure rate
+will be low enough that
+it won't be significantly worse in practice.
+
+Once we have decided on an effective travel time,
+we create two Int variable for each timestep.
+The first is the previously mentioned waitBefore,
+the amount of time waited after finishing the last step
+before starting the next one.
+This variable is constrained to be non-negative,
+but is otherwise free to be assigned whatever value
+makes the schedule work out best.
+
+The second Int variable
+is the time at which that step is started.
+This variable is constrained
+to be exactly equal to the time
+of the previous time variable,
+plus the waitBefore time,
+plus the time taken to complete the previous task,
+plus the time taken to travel
+from the previous task to the next task.
+We encode the time taken to complete the previous task
+using the ``ite'' construct for each possible previous task,
+giving a zero value if that task was not completed last timestep,
+and the value of the task duration if it was.
+We similarly encode the travel time,
+using every possible pair of tasks we could have traveled in between.
+Next, we require that if a task is done at a particular timestep,
+we require that that timestep be fully within one of the tasks intervals.
+That means that the task must start after the beginning of the interval,
+and be finished before the end.
+
+Finally, once we have properly constrained the solver
+so that every solution will be a valid schedule,
+that the robot can execute,
+we attempt to find the \textit{optimal} schedule.
+We decided to encode task weights as integers,
+where higher is better,
+but zero is an admin task.
+
+First, we create a variable
+for each task being accomplished
+at some timestep,
+and set up an implication constraint
+so that it can only be true
+if the the task was completed at some timestep.
+Then, we use a MaxSAT algorithm
+to determine the schedule which can fit in the most admin tasks.
+Then, we run it again to find the schedule with the greatest
+sum weights of non-admin tasks,
+given that it must accomplish the admin tasks found.
+We reimplemented
+the WMax algorithm described here%
+\footnote{http://research.microsoft.com/en-US/people/nbjorner/scss2014.pdf},
+because we were not able to find the tool itself.
+This approach is slightly flawed,
+since there may be multiple optimal sets of admin tasks,
+and one may allow more non-admin tasks,
+but we felt that the slight benefits
+of trying multiple configurations of optimal admin tasks
+did not outweigh the running time cost.
+
+Once we've figured out the optimal configuration,
+we parse the list booleans
+indicating whether each task was accomplished at each timestep,
+plus the waitBefore times of each step,
+into a path, and give it to the ROS interface.
 
 \section{Results}
 
