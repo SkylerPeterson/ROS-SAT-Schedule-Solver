@@ -138,14 +138,28 @@ Taken separately, each request takes ten minutes,
 and it is not possible to do both,
 since it would take twenty minutes to do both individually.
 But Zach's and Emina's offices are only a minute apart,
-both being on the fifth floor,
-it actually is possible to complete both tasks,
-since one can go to one office, complete the task,
+both being on the fifth floor (see Figure \ref{fig:overview-example}),
+it actually is possible to complete both tasks.
+DUB-E can go to one office, complete the task,
 and travel to the other one,
 in only eleven minutes.
 Completing the second task takes a further five minutes,
 for a total time of sixteen minutes,
 well within the deadline.
+
+\begin{figure}
+  \begin{tikzpicture}
+    \tikzstyle{every node}=[draw, shape=circle];
+    \node (S) at (0:0) {DUB-E Start};
+    \node (Z) at (20:5) {Zach's Office};
+    \node (E) at (60:5) {Emina's Office};
+    \draw (S) -- (Z) node [midway, fill=white, draw=white] {5};
+    \draw (S) -- (E) node [midway, fill=white, draw=white] {5};
+    \draw (Z) -- (E) node [midway, fill=white, draw=white] {1};
+  \end{tikzpicture}
+  \caption{}
+  \label{fig:overview-example}
+\end{figure}
 
 It is clear from this example that
 a proper scheduling algorithm must consider spatial factors,
@@ -205,7 +219,6 @@ and for some steps to be empty.
 We create a boolean variable for each time step t labeled None@t,
 which indicates whether or not \textbf{no} tasks are scheduled at that time step,
 and require that exactly one of the set of $\{None\} \cup tasksScheduled$
-<<<<<<< HEAD
 be true for each time step.
 
 To make other constraints simpler,
@@ -215,7 +228,7 @@ be at the end of the schedule.
 That is, if a time step has ‘’None’’,
 then all time steps after it have ‘’None’’,
 forcing all actual tasks to the front of the time steps.
-(see above Figure).
+(see Figure \ref{fig:none-constraints}).
 \begin{figure}
   \begin{tikzpicture}[scale=2]
     \draw (.5,.5) rectangle  (3,1);
@@ -243,6 +256,7 @@ forcing all actual tasks to the front of the time steps.
     \draw (5.5,.5) -- (6,1);
     \node at (4.75,.75) {C};
   \end{tikzpicture}
+  \caption{}
   \label{fig:none-constraints}
 \end{figure}
 
