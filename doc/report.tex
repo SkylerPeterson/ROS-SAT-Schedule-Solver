@@ -1,7 +1,9 @@
 \documentclass[11pt]{article}
-\usepackage[nomarkers,figuresonly]{endfloat}
+\usepackage[nomarkers,nolists]{endfloat}
 \usepackage{tkz-graph}
 \usetikzlibrary{shapes.geometric}
+
+\renewcommand{\efloatseparator}{\mbox{}}
 
 \title{Optimal Dub-E Scheduling}
 \author{Skyler Peterson, Alex Sanchez-Stern}
@@ -9,22 +11,13 @@
 \begin{document}
 \maketitle
 \section{Introduction}
-For our final project,
-we decided to look to robotics
-for problems that SMT might be able to tackle.
-Since we are fortunate enough to be at a school
-where there is always interesting work going on across fields,
-we didn't have to look far.
-We contacted Michael Jae-Yoon Chung and Andrzej Pronobis,
-who are working on the Semantics Aware Robotic Assistant,
-more commonly known as DUB-E.
-DUB-E is able to traverse the CSE building,
-and accomplish tasks for its users,
+DUB-E, an instance of a Semantics Aware Robotic Assistant (SARA),
+is a robot that traverses the CSE building
+and accomplishes simple tasks for it's users,
 such as checking whether a particular professor is in their office.
 DUB-E is controlled via a web interface,
 from which users can request that certain tasks be accomplished,
 by a particular deadline.
-
 Unfortunately, when deadlines are short
 and there are many tasks to accomplish,
 it is non-trivial to decide what task
@@ -32,19 +25,8 @@ should be accomplished and when.
 Additionally, the expressive power of the interface to DUB-E
 is currently limited;
 Users can specify a task deadline,
-but cannot specify more precise timing information,
-such as a time in the future
-before which the task should not be done
-or multiple time periods in which a task can be accomplished.
-Also, it may be the case that not all tasks can be scheduled.
-The DUB-E team asked for multiple task priorities,
-that were weighted,
-so that sufficiently many lower priority tasks
-could be chosen over a higher priority task,
-but also include a special admin priority
-that would never be dropped in favor of lower tasks.
-An admin task may only be dropped if conflicting with another admin
-task.
+but cannot specify more precise task intervals,
+and tasks cannot be give priority over one another.
 
 Handling these new scheduling concerns
 requires a more sophisticated scheduling algorithm
@@ -79,6 +61,16 @@ can mostly be bounded within a range,
 it is always possible that it will completely fail,
 and take much longer to reset itself
 and become fully operational again.
+
+In the case where tasks need to be dropped,
+the SARA team asked for multiple task priorities,
+so that less important tasks could be dropped
+in favor of more important ones,
+but sufficiently many lower priority tasks
+could be chosen over a higher priority task.
+As an exception to this system,
+they also requested a special admin priority
+that would never be dropped in favor of lower tasks.
 
 Previously, DUB-E simply maintained a FIFO queue
 upon which it's tasks resided.
