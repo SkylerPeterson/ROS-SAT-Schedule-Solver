@@ -18,7 +18,7 @@ We contacted Michael Jae-Yoon Chung and Andrzej Pronobis,
 who are working on the Semantics Aware Robotic Assistant,
 more commonly known as DUB-E.
 DUB-E is able to traverse the CSE building,
-and accomplish tasks for it's users,
+and accomplish tasks for its users,
 such as checking whether a particular professor is in their office.
 DUB-E is controlled via a web interface,
 from which users can request that certain tasks be accomplished,
@@ -27,14 +27,19 @@ by a particular deadline.
 Unfortunately, when deadlines are short
 and there are many tasks to accomplish,
 it is non-trivial to decide what task
-should be accomplished when.
+should be accomplished and when.
 Additionally, the expressive power of the interface to DUB-E
 is currently limited;
-Users can specify a tasks deadline,
+Users can specify a task deadline,
 but cannot specify more precise timing information,
 such as a time in the future
-before which the task should not be done,
+before which the task should not be done
 or multiple time periods in which a task can be accomplished.
+The current implementation is a simple FIFO ordering based on
+time of scheduling. No other temporal information is
+used. When a task is completed the next is begun and if the
+deadline has passed, an apology is sent and the next task
+is run.
 
 Handling these new scheduling concerns
 requires a more sophisticated scheduling algorithm
@@ -47,20 +52,26 @@ The result is a schedule which instructs DUB-E
 when to tackle each task and,
 in some cases,
 how long to wait in between tasks.
+This encoding allows many more tasks to be
+completed without dropping them and also
+allows the robot to take advantage of time
+when planning task execution.
+
+
 \section{Overview}
 DUB-E's overall behavior is quite simple.
 It is notified of new tasks via the web interface,
 and it's scheduler decides what tasks to do when.
 Each time it receives a new task,
-it can change how it schedules it's current tasks.
-Tasks which are completed are removed from it's schedule.
+it can change how it schedules its current tasks.
+Tasks which are completed are removed from its schedule.
 
 But not all tasks get completed.
 If DUB-E is overscheduled,
 it may not have enough time to complete a requested task in time.
 Additionally, the travel time of DUB-E
 is not entirely predictable.
-While it's travel time between two locations
+While its travel time between two locations
 can mostly be bounded within a range,
 it is always possible that it will completely fail,
 and take much longer to reset itself
@@ -74,10 +85,10 @@ New requests made via the web interface
 were added to the end of the queue,
 and when DUB-E was not currently working on a task,
 it pulled the next task from the front of the queue.
-When DUB-E pulled a task from the queue
+When DUB-E does pull a task from the queue
 whose deadline had already passed,
-it notified the user that it was unable to complete the task,
-and dropped it from the queue.
+it notifies the user that it was unable to complete the task,
+and drops it from the queue.
 While simple and fair,
 this algorithm fails to provide
 optimal behavior in a variety of simple scenarios.
@@ -104,6 +115,13 @@ it would have missed the deadline for finding Emina.
 If instead it had reordered the tasks,
 checking for Emina first,
 it would be able to accomplish both tasks on time.
+This scenario can become even worse if user one gives a
+very large deadline and a task which takes a long time.
+Then if many small tasks are given which all take place in
+the same location but also have short deadlines, the first
+user has just blocked all of these task unnecessarily.
+In the worse case, this can allow a bad user to launch
+a DOS, by simply scheduling large tasks.
 
 The DUB-E scheduling problem is not simply
 a classic instance of scheduling
@@ -116,7 +134,7 @@ should be completed in 18 minutes.
 If DUB-E is in another part of the building,
 it might take five minutes to get to both offices,
 and take five minutes to check them.
-Taken seperately, each request takes ten minutes,
+Taken separately, each request takes ten minutes,
 and it is not possible to do both,
 since it would take twenty minutes to do both individually.
 But Zach's and Emina's offices are only a minute apart,
@@ -138,22 +156,24 @@ The DUB-E team asked for multiple task priorities,
 that were weighted,
 so that sufficiently many lower priority tasks
 could be chosen over a higher priority task,
-but also had an admin weight
-that would never be dropped in favor of lower tasks.
+but also include a special admin priority
+that would never be dropped in favor of lower tasks. An
+Admin task may only be dropped if conflicting with another admin
+task.
+
 
 \section{Scheduler Encoding}
-
 To tackle these unique constraints,
 we had to develop an encoding which could scale fairly well,
 while still supporting all the features the DUB-E team wanted.
 Since tasks can occur at a multitude of times,
-and include times waited between tasks,
+and include waiting times between tasks,
 if a task is completed and the next one
 belongs to an interval that has not started,
 a naive approach would be to ask the solver
 to simply give us the times at which each task is done,
 given the problem constraints.
-But solving for this many continious variables
+But solving for this many continuous variables
 would not scale to an even reasonable number of tasks.
 Instead, we discretized time into an integer counter,
 simplifying the issue even if we lose a little granularity,
@@ -162,15 +182,15 @@ to ``time steps.''
 
 For finding the optimal schedule of N tasks,
 we attempt to find the best assignment
-of tasks to N timesteps,
-as well as solving for a single integer for each timestep
-indicating how long should be waited before starting that timestep.
+of tasks to N time steps,
+as well as solving for a single integer for each time step
+indicating how long DUB-E should be waited before starting that time step.
 We constrain the solution to this in several ways
 which allow results to be a valid schedule.
 
 Since there exists a boolean variable for
 each task being accomplished at each step,
-we add one-hot constraints
+we add one hot-constraint
 so that at most one task is scheduled for each step,
 and each task is scheduled for at most one step.
 It might seem like we should require that
@@ -182,19 +202,19 @@ and so not all of them can be accomplished.
 To account for this case,
 we must allow for tasks to be not scheduled for any step,
 and for some steps to be empty.
-We create a boolean variable for each timestep t labeled None@t,
-which indicates whether or not \textbf{no} tasks are scheduled at that timestep,
+We create a boolean variable for each time step t labeled None@t,
+which indicates whether or not \textbf{no} tasks are scheduled at that time step,
 and require that exactly one of the set of $\{None\} \cup tasksScheduled$
-be true for each timestep.
+<<<<<<< HEAD
+be true for each time step.
 
-To make other constraints,
-as well as the resulting schedule
-simpler,
-we also require that all the None's
-are at the end of the schedule.
-That is, if a timestep has None,
-then all timesteps after it have None,
-forcing all actual tasks to the front of the timesteps
+To make other constraints simpler,
+including the resulting schedule,
+we also require that all of the ''None's''
+be at the end of the schedule.
+That is, if a time step has ‘’None’’,
+then all time steps after it have ‘’None’’,
+forcing all actual tasks to the front of the time steps.
 (see above Figure).
 \begin{figure}
   \begin{tikzpicture}[scale=2]
@@ -226,12 +246,12 @@ forcing all actual tasks to the front of the timesteps
   \label{fig:none-constraints}
 \end{figure}
 
-Now that we've encoded
-the notion of assignment of tasks to timesteps
+Now that we have encoded
+the notion of assignment of tasks to time steps
 into constraints,
 we must encode the timing constraints.
 But how long does traveling between tasks task?
-Due to the unpredictability of the robot and it's environment,
+Due to the unpredictability of the robot and its environment,
 we don't have a fixed bound on how long traveling between locations will take.
 However, we do have a notion of the longest they should take
 if nothing goes terribly wrong.
@@ -242,13 +262,17 @@ if nothing goes terribly wrong.
 If something \textit{does} go terribly wrong,
 and DUB-E falls behind schedule,
 we reschedule.
-Here, we slightly comprimise on optimality,
+Here, we slightly compromise on optimality,
 but we hope that the failure rate
 will be low enough that
 it won't be significantly worse in practice.
+This is one of the realities of robotics, where
+software and hardware must constantly be evaluating
+and acting upon the environment, while also being mobile.
+This makes almost all tasks unpredictable.
 
 Once we have decided on an effective travel time,
-we create two Int variable for each timestep.
+we create two Int variables for each time step.
 The first is the previously mentioned waitBefore,
 the amount of time waited after finishing the last step
 before starting the next one.
@@ -267,12 +291,12 @@ plus the time taken to travel
 from the previous task to the next task.
 We encode the time taken to complete the previous task
 using the ``ite'' construct for each possible previous task,
-giving a zero value if that task was not completed last timestep,
+giving a zero value if that task was not completed last time step,
 and the value of the task duration if it was.
 We similarly encode the travel time,
 using every possible pair of tasks we could have traveled in between.
-Next, we require that if a task is done at a particular timestep,
-we require that that timestep be fully within one of the tasks intervals.
+Next, we require that if a task is done at a particular time step,
+we require that that time step be fully within one of the tasks intervals.
 That means that the task must start after the beginning of the interval,
 and be finished before the end.
 
@@ -286,10 +310,10 @@ but zero is an admin task.
 
 First, we create a variable
 for each task being accomplished
-at some timestep,
+at some time step,
 and set up an implication constraint
 so that it can only be true
-if the the task was completed at some timestep.
+if the task was completed at some time step.
 Then, we use a MaxSAT algorithm
 to determine the schedule which can fit in the most admin tasks.
 Then, we run it again to find the schedule with the greatest
@@ -308,25 +332,32 @@ did not outweigh the running time cost.
 
 Once we've figured out the optimal configuration,
 we parse the list booleans
-indicating whether each task was accomplished at each timestep,
+indicating whether each task was accomplished at each time step,
 plus the waitBefore times of each step,
 into a path, and give it to the ROS interface.
 
+
 \section{Results}
 
+
+
 \section{Project Division}
-We roughly divided the work into the encoding,
+For the most part we roughly divided the work into the encoding,
 and the interface with DUB-E.
 Skyler handled the interface with the robot,
 setting up ROS nodes and working with Michael and Andrzej
 to get the encoder integrated
-into the DUB-E codebase.
+into the DUB-E codebase. This required significant
+domain knowledge and experience working with the
+''Robotic Operating System'' or ROS in which the
+current SARA code base is implemented in.
 Alex handled the actual encoding of the task constraints,
 setting up the Z3 bindings to interface with the code,
 and writing modules to take in task information,
 encode it into a set of Z3 constraints,
 decode the Z3 output into a schedule,
 and format the schedule for DUB-E.
+
 
 \section{Applied Topics}
 This project involved mostly topics
@@ -339,4 +370,10 @@ The encoding also made heavy use of MaxSAT,
 which we touched on in class,
 to satisfy the greatest number of tasks
 in cases where not all tasks could be satisfied.
+
+
+\section{References}
+
+
+
 \end{document}
