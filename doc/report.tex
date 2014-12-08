@@ -1,4 +1,7 @@
 \documentclass{article}
+\usepackage{tkz-graph}
+\usetikzlibrary{shapes.geometric}
+
 \title{Optimal Dub-E Scheduling}
 \author{Skyler Peterson, Alex Sanchez-Stern}
 
@@ -185,13 +188,43 @@ and require that exactly one of the set of $\{None\} \cup tasksScheduled$
 be true for each timestep.
 
 To make other constraints,
-as well as the resulting schedule,
+as well as the resulting schedule
 simpler,
 we also require that all the None's
 are at the end of the schedule.
 That is, if a timestep has None,
 then all timesteps after it have None,
-forcing all actual tasks to the front of the timesteps.
+forcing all actual tasks to the front of the timesteps
+(see above Figure).
+\begin{figure}
+  \begin{tikzpicture}[scale=2]
+    \draw (.5,.5) rectangle  (3,1);
+    \draw (1,.5) -- (1,1);
+    \draw (1.5,.5) -- (1.5,1);
+    \draw (2,.5) -- (2,1);
+    \draw (2.5,.5) -- (2.5,1);
+    \draw (1.75,.75) ellipse (1.5 and .5);
+    \node at (.75,.75) {A};
+    \draw (1,.5) -- (1.5,1);
+    \node at (1.75,.75) {B};
+    \draw (2,.5) -- (2.5,1);
+    \node at (2.75,.75) {C};
+    \draw (.25,.25) -- (3.25,1.25);
+
+    \draw (3.5,.5) rectangle  (6,1);
+    \draw (4,.5) -- (4,1);
+    \draw (4.5,.5) -- (4.5,1);
+    \draw (5,.5) -- (5,1);
+    \draw (5.5,.5) -- (5.5,1);
+    \draw (4.75,.75) ellipse (1.5 and .5);
+    \node at (3.75,.75) {A};
+    \draw (5,.5) -- (5.5,1);
+    \node at (4.25,.75) {B};
+    \draw (5.5,.5) -- (6,1);
+    \node at (4.75,.75) {C};
+  \end{tikzpicture}
+  \label{fig:none-constraints}
+\end{figure}
 
 Now that we've encoded
 the notion of assignment of tasks to timesteps
