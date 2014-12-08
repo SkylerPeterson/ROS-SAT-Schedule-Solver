@@ -50,13 +50,11 @@ and then using Z3 as a backend
 to solve the constraints.
 The result is a schedule which instructs DUB-E
 when to tackle each task and,
-in some cases,
+when necessary,
 how long to wait in between tasks.
-This encoding allows many more tasks to be
-completed without dropping them and also
-allows the robot to take advantage of time
-when planning task execution.
-
+This new scheduler allows DUB-E
+to take advantage of timing information,
+allowing many more tasks to be completed.
 
 \section{Overview}
 DUB-E's overall behavior is quite simple.
@@ -185,10 +183,13 @@ To tackle these unique constraints,
 we had to develop an encoding which could scale fairly well,
 while still supporting all the features the DUB-E team wanted.
 Since tasks can occur at a multitude of times,
-and include waiting times between tasks,
+and include waiting times between tasks
 if a task is completed and the next one
 belongs to an interval that has not started,
-a naive approach would be to ask the solver
+a schedule must contain more than just a list of tasks to be completed;
+it also needs to know to wait between certain tasks.
+
+A naive approach would be to ask the solver
 to simply give us the times at which each task is done,
 given the problem constraints.
 But solving for this many continuous variables
@@ -208,7 +209,7 @@ which allow results to be a valid schedule.
 
 Since there exists a boolean variable for
 each task being accomplished at each step,
-we add one hot-constraint
+we add a one-hot constraint
 so that at most one task is scheduled for each step,
 and each task is scheduled for at most one step.
 It might seem like we should require that
@@ -337,8 +338,8 @@ to determine the schedule which can fit in the most admin tasks.
 Then, we run it again to find the schedule with the greatest
 sum weights of non-admin tasks,
 given that it must accomplish the admin tasks found.
-We reimplemented
-the WMax algorithm \cite{vZ}
+We reimplemented the WMax algorithm
+as described in vZ, an extension to Z3 supporting MaxSAT \cite{vZ},
 because we were not able to find the tool itself.
 This approach is slightly flawed,
 since there may be multiple optimal sets of admin tasks,
@@ -423,7 +424,7 @@ ROS package runs with 100\% integration with the SARA
 code base in test cases. There are still a couple of
 things that must be done before the new scheduler
 can work live on the robot. As earlier discussed,
-the old simple was extremely simple and did not take
+the old scheduler was extremely simple and did not take
 into account any constraints except deadlines and these
 were only looked at during runtime. Since we added much
 complexity, there are a few integration issues to handle
