@@ -169,17 +169,6 @@ well within the deadline.
 It is clear from this example that
 a proper scheduling algorithm must consider spatial factors,
 as well as temporal ones.
-Additionally, it may be the case that not all tasks can be scheduled,
-and tasks have non-uniform priorities.
-The DUB-E team asked for multiple task priorities,
-that were weighted,
-so that sufficiently many lower priority tasks
-could be chosen over a higher priority task,
-but also include a special admin priority
-that would never be dropped in favor of lower tasks. An
-Admin task may only be dropped if conflicting with another admin
-task.
-
 
 \section{Scheduler Encoding}
 To tackle these unique constraints,
