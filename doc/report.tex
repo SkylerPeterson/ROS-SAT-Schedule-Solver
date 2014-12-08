@@ -334,8 +334,7 @@ Then, we run it again to find the schedule with the greatest
 sum weights of non-admin tasks,
 given that it must accomplish the admin tasks found.
 We reimplemented
-the WMax algorithm described here%
-\footnote{http://research.microsoft.com/en-US/people/nbjorner/scss2014.pdf},
+the WMax algorithm \cite{vZ}
 because we were not able to find the tool itself.
 This approach is slightly flawed,
 since there may be multiple optimal sets of admin tasks,
@@ -353,7 +352,23 @@ into a path, and give it to the ROS interface.
 
 \section{Results}
 
-
+One of the main problems we faced
+in the implementation of the encoding
+was finding an appropriate MaxSAT algorithm.
+We initially thought that there would be a simple
+out-of-the-box solution with Z3.
+But upon looking closer,
+we found that the MaxSAT example
+in the Z3 codebase
+utilized special features of the C API,
+and was not compatible with the current syntax.
+Looking into the papers cited by the example,
+it seemed like they only addressed the problem
+for unweighted MaxSAT.
+Instead, we researched and found the vZ paper,
+and were able to implement some of the algorithms
+it described,
+although it took much longer than expected.
 
 \section{Project Division}
 For the most part we roughly divided the work into the encoding,
@@ -399,6 +414,7 @@ in cases where not all tasks could be satisfied.
 \bibitem{vZ}
   Bj{\o}rner, Nikolaj and Phan, Anh-Dung,
   \emph{vZ: Maximal Satisfaction with Z3}.
+  http://research.microsoft.com/en-US/people/nbjorner/scss2014.pdf
   2014.
 
 \end{thebibliography}
