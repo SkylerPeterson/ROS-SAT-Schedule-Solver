@@ -18,6 +18,8 @@ of this ROS package.
   - This Readme file
   - doc
     - report.tex (latex of report for this project)
+    - optimal-dub-e.pdf (pdf of latex file)
+    - Some png files of the figures in the report
   - include (ignore this directory)
   - launch
     - run_sat_scheduler.launch (launch file to run this package in ros)
