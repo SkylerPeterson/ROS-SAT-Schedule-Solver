@@ -116,13 +116,10 @@ it would have missed the deadline for finding Emina.
 If instead it had reordered the tasks,
 checking for Emina first,
 it would be able to accomplish both tasks on time.
-This scenario can become even worse if user one gives a
-very large deadline and a task which takes a long time.
-Then if many small tasks are given which all take place in
-the same location but also have short deadlines, the first
-user has just blocked all of these task unnecessarily.
-In the worse case, this can allow a bad user to launch
-a DOS, by simply scheduling large tasks.
+The strict ordering of tasks
+based on time of request
+also means that a sufficiently early malicious user
+could block many more important tasks from being accomplished.
 
 The DUB-E scheduling problem is not simply
 a classic instance of scheduling
