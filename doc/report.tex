@@ -36,11 +36,15 @@ but cannot specify more precise timing information,
 such as a time in the future
 before which the task should not be done
 or multiple time periods in which a task can be accomplished.
-The current implementation is a simple FIFO ordering based on
-time of scheduling. No other temporal information is
-used. When a task is completed the next is begun and if the
-deadline has passed, an apology is sent and the next task
-is run.
+Also, it may be the case that not all tasks can be scheduled.
+The DUB-E team asked for multiple task priorities,
+that were weighted,
+so that sufficiently many lower priority tasks
+could be chosen over a higher priority task,
+but also include a special admin priority
+that would never be dropped in favor of lower tasks.
+An admin task may only be dropped if conflicting with another admin
+task.
 
 Handling these new scheduling concerns
 requires a more sophisticated scheduling algorithm
@@ -76,18 +80,16 @@ it is always possible that it will completely fail,
 and take much longer to reset itself
 and become fully operational again.
 
-The previous scheduling algorithm
-for DUB-E was quite simple.
-DUB-E simply maintained a FIFO queue
+Previously, DUB-E simply maintained a FIFO queue
 upon which it's tasks resided.
 New requests made via the web interface
 were added to the end of the queue,
 and when DUB-E was not currently working on a task,
 it pulled the next task from the front of the queue.
-When DUB-E does pull a task from the queue
+When DUB-E pulled a task from the queue
 whose deadline had already passed,
-it notifies the user that it was unable to complete the task,
-and drops it from the queue.
+it notified the user that it was unable to complete the task,
+and dropped it from the queue.
 While simple and fair,
 this algorithm fails to provide
 optimal behavior in a variety of simple scenarios.
