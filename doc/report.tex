@@ -345,6 +345,18 @@ into a path, and give it to the ROS interface.
 
 
 \section{Results}
+
+We demonstrate our algorithm
+on a complex set of tasks.
+We take ten tasks,
+of three task types,
+and distribute them across ten locations.
+We start the agent at a seperate start location.
+Figure~\ref{fig:text-schedule}
+shows the schedule outputted by our algorithm,
+and Figure~\ref{fig:TenTaskResult} shows the solution
+displayed graphically.
+
 A large portion of the unknowns and design
 challenges in this project were related to
 actually trying to get the new scheduler to
@@ -412,35 +424,22 @@ give more flexibility to the SARA project. The new
 ROS package runs with 100\% integration with the SARA
 code base in test cases. There are still a couple of
 things that must be done before the new scheduler
-can work live on the robot. As earlier discussed,
-the old scheduler was extremely simple and did not take
-into account any constraints except deadlines and these
-were only looked at during runtime. Since we added much
-complexity, there are a few integration issues to handle
-before the robot can run live. Primarily, this means
-providing a few more parameters in the database. We need
-priorities and additional time constraints which we can
-mock in testing and it can be simplified in live runs too.
-For instance, we can just always assign priorities of 0
-for now. The biggest hurdle is a useful ''World'' description.
-Part of the encoder expects a World class which can give
-back estimates of travel time and task time. This does
-not exist yet, but the SARA team is currently working on
-this, however it is a difficult problem, due to the
-aforementioned chaos of real world robotics. The SARA
-team is expecting to fully incorporate the new SAT encoder
-into their project over the short time and we will
-continue to support them.
-
-Finally, we would like to document one result from the
-project. Figure~\ref{fig:TenTaskResult} shows the outputted
-plan of this encoder given ten tasks, chosen from three
-possible distinguishable tasks for each location, and
-ten locations, plus the start location. The red lines
-demonstrate the resulting path beginning at ''startLoc''.
-Table 1 shows the result in table format with tasks and wait
-times.
-
+can work live on the robot.
+As the old scheduler did not take into account
+estimated travel time or task duration,
+the surrounding code must be updated
+to retrieve this information
+and provide it to the scheduler.
+Additionally, the web interface
+did not previously allow task intervals or priorities,
+since the scheduler did not support it.
+Now that we have support,
+these things should be added to the web interface,
+although they have easy default values
+that will preserve current behavior in the meantime.
+The SARA team is currently working on providing these things,
+and we will work with them to address issues resulting
+from the actual implementation as they arise.
 
 \begin{figure}
 \centering
