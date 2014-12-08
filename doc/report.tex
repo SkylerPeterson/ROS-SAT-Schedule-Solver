@@ -157,7 +157,11 @@ well within the deadline.
     \draw (S) -- (E) node [midway, fill=white, draw=white] {5};
     \draw (Z) -- (E) node [midway, fill=white, draw=white] {1};
   \end{tikzpicture}
-  \caption{}
+  \caption{
+    Each task takes five minutes
+    to get to from the start,
+    but they are only one minute apart.
+  }
   \label{fig:overview-example}
 \end{figure}
 
@@ -256,7 +260,7 @@ forcing all actual tasks to the front of the time steps.
     \draw (5.5,.5) -- (6,1);
     \node at (4.75,.75) {C};
   \end{tikzpicture}
-  \caption{}
+  \caption{We force all None's to the end of the schedule, for simpler constraints.}
   \label{fig:none-constraints}
 \end{figure}
 
