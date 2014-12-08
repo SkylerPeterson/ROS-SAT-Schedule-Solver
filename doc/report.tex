@@ -450,56 +450,50 @@ from the actual implementation as they arise.
 \begin{figure}
 \centering
 \includegraphics[width=0.8\textwidth]{Ten_Task_Result.png}
-\caption{\label{fig:TenTaskResult}This is an example output of the sat scheduler given ten locations and ten jobs, one of three possible tasks at each location. Black lines are potential routes and red lines are the actual route. Numbers demonstrate time in seconds to travel that edge.}
+\label{fig:TenTaskResult}
+\caption{
+  This is an example output
+  of the sat scheduler
+  given ten locations and ten jobs,
+  and one of three possible tasks classes
+  at each location.
+  Black lines are paths between locations,
+  and the red lines
+  make up the chosen route.
+  Edge labels
+  indicate the time to travel
+  between two locations.
+}
 \end{figure}
 
-\begin{center}
-    \begin{tabular}{ | p{7.5cm} | p{4.5cm} |}
-    \hline
-    Event & Time to Execute (seconds) \\ \hline \hline
-    Wait at location ''startPos'' & 11034 \\ \hline
-    Travel from location ''startPos'' to ''Room2'' & 544 \\ \hline
-    Due Task3 at location ''Room2'' & 600 \\ \hline
-    
-    Wait at location ''Room2'' & 32564 \\ \hline
-    Travel from location ''Room2'' to ''Room9'' & 242 \\ \hline
-    Due Task1 at location ''Room9'' & 150 \\ \hline
-    
-    Wait at location ''Room9'' & 27021 \\ \hline
-    Travel from location ''Room9'' to ''Room3'' & 110 \\ \hline
-    Due Task1 at location ''Room3'' & 150 \\ \hline
-    
-    Wait at location ''Room3'' & 27457 \\ \hline
-    Travel from location ''Room3'' to ''Room5'' & 713 \\ \hline
-    Due Task2 at location ''Room5'' & 400 \\ \hline
-    
-    Wait at location ''Room5'' & 11951 \\ \hline
-    Travel from location ''Room5'' to ''Room8'' & 728 \\ \hline
-    Due Task3 at location ''Room8'' & 600 \\ \hline
-    
-    Wait at location ''Room8'' & 53709 \\ \hline
-    Travel from location ''Room8'' to ''Room7'' & 931 \\ \hline
-    Due Task2 at location ''Room7'' & 400 \\ \hline
-    
-    Wait at location ''Room7'' & 15881 \\ \hline
-    Travel from location ''Room7'' to ''Room1'' & 988 \\ \hline
-    Due Task2 at location ''Room1'' & 400 \\ \hline
-    
-    Wait at location ''Room1'' & 46943 \\ \hline
-    Travel from location ''Room1'' to ''Room6'' & 752 \\ \hline
-    Due Task1 at location ''Room6'' & 150 \\ \hline
-    
-    Wait at location ''Room6'' & 29825 \\ \hline
-    Travel from location ''Room6'' to ''Room10'' & 416 \\ \hline
-    Due Task3 at location ''Room10'' & 600 \\ \hline
-    
-    Wait at location ''Room10'' & 19836 \\ \hline
-    Travel from location ''Room10'' to ''Room4'' & 719 \\ \hline
-    Due Task2 at location ''Room4'' & 400 \\ \hline
-    
-    Done & 0 \\ \hline
-    \end{tabular}
-\end{center}
+\begin{figure}
+  \begin{enumerate}
+    \item Wait for 11034 seconds at the start
+    \item go to ``Room 2'' (544 secs) and do a $Task_3$ (600 secs)
+    \item wait for 32564 seconds
+    \item go to ``Room 9'' (242 secs) and do a $Task_1$ (150 secs)
+    \item wait for 27021 seconds
+    \item go to ``Room 3'' (110 secs) and do a $Task_1$ (150 secs)
+    \item wait for 27457 seconds
+    \item go to ``Room 5'' (713 secs) and do a $Task_2$ (400 secs)
+    \item wait for 11951 seconds
+    \item go to ``Room 8'' (728 secs) and do a $Task_3$ (600 secs)
+    \item wait for 53709 seconds
+    \item go to ``Room 7'' (931 secs) and do a $Task_2$ (400 secs)
+    \item wait for 15881 seconds
+    \item go to ``Room 1'' (988 secs) and do a $Task_2$ (400 secs)
+    \item wait for 46943 seconds
+    \item go to ``Room 6'' (752 secs) and do a $Task_1$ (150 secs)
+    \item wait for 29825 seconds
+    \item go to ``Room 10'' (416 secs) and do a $Task_3$ (600 secs)
+    \item wait for 19836 seconds
+    \item go to ``Room 4'' (719 secs) and do a $Task_2$ (400 secs)
+  \end{enumerate}
+  \caption{
+    A text description of the schedule found in our example problem.
+  }
+  \label{fig:text-schedule}
+\end{figure}
 
 \section{Project Division}
 For the most part we roughly divided the work into the encoding,
