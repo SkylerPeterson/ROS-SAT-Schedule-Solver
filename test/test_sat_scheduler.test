@@ -30,10 +30,8 @@
   <!-- Test nodes -->
   <!-- test_queryjob_scheduler_xxx files contain only one function for testing. This is because we need queryjob_scheduler to be restarted every time each function is being called. -->
 
-  <comment>
-    <test test-name="test_sat_single_queryjob_single_location_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" args="--testcase_id 0 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
-    <test test-name="test_sat_single_queryjob_small_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" args="--testcase_id 1 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
-  </comment>
-  <test test-name="test_sat_multi_queryjob_large_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" time-limit="120.0" args="--testcase_id 2 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
+  <test test-name="test_sat_single_queryjob_single_location_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" args="--testcase_id 0 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
+  <test test-name="test_sat_single_queryjob_small_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" args="--testcase_id 1 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
+  <test test-name="test_sat_multi_queryjob_large_map_valid_scheduling" pkg="sat_schedule_solver" type="test_sat_scheduler" time-limit="180.0" args="--testcase_id 2 --host $(arg host) --port $(arg port)  --dbname $(arg dbname) --collname $(arg collname)"/>
 
 </launch>
